@@ -27,77 +27,92 @@ ROUTES = [
     {"from": "Kolkata Airport", "to": "Kharagpur"},
 ]
 
-# ── Schedule: multiple daily departures for the next 7 days ───────────────────
+# ── Images (High Quality Vehicle Images) ──────────────────────────────────────
+IMAGES = [
+    "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80", # White Bus
+    "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80", # Blue Bus
+    "https://images.unsplash.com/photo-1464219222984-216eb6fca743?w=800&q=80", # Yellow Van
+    "https://images.unsplash.com/photo-1590333746438-283503806bb2?w=800&q=80", # Luxury Coach
+    "https://images.unsplash.com/photo-1562620644-65ca4da00174?w=800&q=80"  # Shuttle
+]
+
+OPERATORS = [
+    {"name": "KGP Shuttle Service", "price": 450, "rating": 4.8},
+    {"name": "Bengal Travels",      "price": 500, "rating": 4.6},
+    {"name": "Airport Connect",     "price": 420, "rating": 4.5},
+    {"name": "Luxury Line",         "price": 650, "rating": 4.9}
+]
+
+# ── Schedule: multiple daily departures for the next 30 days ───────────────────
 KGP_CCU_TIMES = ["05:30", "08:00", "11:00", "14:30", "18:00", "21:00"]
 CCU_KGP_TIMES = ["06:00", "09:00", "12:00", "16:00", "19:00", "22:00"]
-JOURNEY_HOURS = 3  # ~3 hours journey
-
-PRICE_KGP_CCU = 450.0
-PRICE_CCU_KGP = 450.0
-TOTAL_SEATS   = 17
-OPERATOR      = "KGP Shuttle Service"
+JOURNEY_HOURS = 3 
 
 today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
 ride_count = 0
 
-for day_offset in range(7):   # seed 7 days
+for day_offset in range(30):
     day = today + timedelta(days=day_offset)
 
-    for time_str in KGP_CCU_TIMES:
+    for i, time_str in enumerate(KGP_CCU_TIMES):
         h, m = map(int, time_str.split(":"))
         dep = day.replace(hour=h, minute=m)
         arr = dep + timedelta(hours=JOURNEY_HOURS)
+        
+        op = OPERATORS[i % len(OPERATORS)]
 
         ride = Ride(
             type="traveller",
-            operator_name=OPERATOR,
+            operator_name=op["name"],
             from_city="Kharagpur",
             to_city="Kolkata Airport",
             departure_time=dep,
             arrival_time=arr,
-            price=PRICE_KGP_CCU,
-            rating=4.5,
-            total_reviews=120,
-            total_seats=TOTAL_SEATS,
-            available_seats=TOTAL_SEATS,
+            price=op["price"],
+            rating=op["rating"],
+            total_reviews=100 + (day_offset * 5) + (i * 10),
+            total_seats=17,
+            available_seats=17,
+            image_url=IMAGES[i % len(IMAGES)],
             is_active=True,
         )
-        ride.amenities = ["AC", "WiFi", "Charging Port"]
+        ride.amenities = ["AC", "WiFi", "Charging Port", "Bottle"]
         db.add(ride)
         db.flush()
 
-        for n in range(1, TOTAL_SEATS + 1):
+        for n in range(1, 18):
             db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available"))
-
         ride_count += 1
 
-    for time_str in CCU_KGP_TIMES:
+    for i, time_str in enumerate(CCU_KGP_TIMES):
         h, m = map(int, time_str.split(":"))
         dep = day.replace(hour=h, minute=m)
         arr = dep + timedelta(hours=JOURNEY_HOURS)
+        
+        op = OPERATORS[(i+1) % len(OPERATORS)]
 
         ride = Ride(
             type="traveller",
-            operator_name=OPERATOR,
+            operator_name=op["name"],
             from_city="Kolkata Airport",
             to_city="Kharagpur",
             departure_time=dep,
             arrival_time=arr,
-            price=PRICE_CCU_KGP,
-            rating=4.5,
-            total_reviews=98,
-            total_seats=TOTAL_SEATS,
-            available_seats=TOTAL_SEATS,
+            price=op["price"],
+            rating=op["rating"],
+            total_reviews=90 + (day_offset * 4) + (i * 8),
+            total_seats=17,
+            available_seats=17,
+            image_url=IMAGES[(i + 1) % len(IMAGES)],
             is_active=True,
         )
-        ride.amenities = ["AC", "WiFi", "Charging Port"]
+        ride.amenities = ["AC", "WiFi", "Music", "USB"]
         db.add(ride)
         db.flush()
 
-        for n in range(1, TOTAL_SEATS + 1):
+        for n in range(1, 18):
             db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available"))
-
         ride_count += 1
 
 # ── Create admin user ──────────────────────────────────────────────────────────
@@ -115,7 +130,5 @@ db.close()
 
 print(f"\n[OK] Database seeded successfully!")
 print(f"   Rides created : {ride_count}")
-print(f"   Seats per ride: {TOTAL_SEATS}")
-print(f"   Admin phone   : 9999999999")
 print(f"   Routes        : Kharagpur <-> Kolkata Airport")
-print(f"   Days seeded   : 7 (today + 6 days)")
+print(f"   Days seeded   : 30")

@@ -45,7 +45,7 @@ def list_travellers(
             departure_time=r.departure_time, arrival_time=r.arrival_time,
             price=r.price, rating=r.rating, total_reviews=r.total_reviews,
             amenities=r.amenities, total_seats=r.total_seats,
-            available_seats=r.available_seats,
+            available_seats=r.available_seats, image_url=r.image_url,
             seats=[SeatSchema.model_validate(s) for s in seats],
         ))
     return results
@@ -78,6 +78,7 @@ def create_traveller(
         price=request.price,
         total_seats=request.total_seats,
         available_seats=request.total_seats,
+        image_url=request.image_url,
         is_active=True,
     )
     ride.amenities = []
@@ -100,7 +101,7 @@ def create_traveller(
         departure_time=ride.departure_time, arrival_time=ride.arrival_time,
         price=ride.price, rating=ride.rating, total_reviews=ride.total_reviews,
         amenities=ride.amenities, total_seats=ride.total_seats,
-        available_seats=ride.available_seats,
+        available_seats=ride.available_seats, image_url=ride.image_url,
         seats=[SeatSchema.model_validate(s) for s in seats],
     )
 
@@ -126,6 +127,8 @@ def update_traveller(
         ride.price = request.price
     if request.is_active is not None:
         ride.is_active = request.is_active
+    if request.image_url is not None:
+        ride.image_url = request.image_url
 
     db.commit()
     db.refresh(ride)
@@ -136,7 +139,7 @@ def update_traveller(
         departure_time=ride.departure_time, arrival_time=ride.arrival_time,
         price=ride.price, rating=ride.rating, total_reviews=ride.total_reviews,
         amenities=ride.amenities, total_seats=ride.total_seats,
-        available_seats=ride.available_seats,
+        available_seats=ride.available_seats, image_url=ride.image_url,
     )
 
 

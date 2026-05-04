@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     OTP_EXPIRE_SECONDS: int = 300    # 5 minutes
     DEBUG: bool = True
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
 
     @property
     def cors_origins_list(self) -> List[str]:

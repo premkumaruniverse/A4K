@@ -26,6 +26,7 @@ class RideSchema(BaseModel):
     amenities: List[str] = []
     total_seats: int
     available_seats: int
+    image_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -45,6 +46,7 @@ class CreateTravellerRequest(BaseModel):
     arrival_time: datetime
     price: float
     total_seats: int = 17
+    image_url: Optional[str] = None
 
 
 class UpdateTravellerRequest(BaseModel):
@@ -54,3 +56,4 @@ class UpdateTravellerRequest(BaseModel):
     price: Optional[float] = None
     total_seats: Optional[int] = None
     is_active: Optional[bool] = None
+    image_url: Optional[str] = None

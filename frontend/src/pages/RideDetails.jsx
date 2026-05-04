@@ -70,6 +70,13 @@ export default function RideDetails() {
         </div>
       </div>
 
+      {/* Hero Image */}
+      {ride.image_url && (
+        <div className="fade-up" style={{ padding: '0 20px', marginTop: 16 }}>
+          <img src={ride.image_url} alt={ride.operator_name} className="ride-hero-img" style={{ borderRadius: 20, boxShadow: 'var(--shadow-md)' }} />
+        </div>
+      )}
+
       {/* Operator Card */}
       <div className="section fade-up">
         <div className="card" style={{ padding: 24, border: 'none', boxShadow: '0 8px 30px rgba(0,0,0,0.05)' }}>

@@ -97,6 +97,9 @@ export default function TravellerList() {
               const seatsColor = getSeatsColor(t.available_seats, t.total_seats);
               return (
                 <div key={t.id} className={`traveller-card ${isFull ? 'full' : ''}`} onClick={() => handleSelect(t)}>
+                  {t.image_url && (
+                    <img src={t.image_url} alt={t.operator_name} className="traveller-img" />
+                  )}
                   {/* Operator */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

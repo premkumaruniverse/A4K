@@ -34,6 +34,38 @@ def _is_valid_route(from_city: str, to_city: str) -> bool:
 def get_routes():
     """Return the two fixed routes available."""
     return {"routes": VALID_ROUTES}
+}
+
+
+def _release_expired_seats(db: Session, ride_id: Optional[str] = None):
+    """Release any seats that have been locked for more than 5 minutes."""
+    from datetime import timedelta
+    expired_threshold = datetime.utcnow() - timedelta(minutes=5)
+    
+    query = db.query(Seat).filter(
+        Seat.status == "locked",
+        Seat.locked_at <= expired_threshold
+    )
+    if ride_id:
+        query = query.filter(Seat.ride_id == ride_id)
+    
+    expired_seats = query.all()
+    if not expired_seats:
+        return
+
+    # Group by ride_id to update available_seats
+    ride_counts = {}
+    for s in expired_seats:
+        s.status = "available"
+        s.locked_at = None
+        ride_counts[s.ride_id] = ride_counts.get(s.ride_id, 0) + 1
+    
+    for rid, count in ride_counts.items():
+        ride = db.query(Ride).filter(Ride.id == rid).first()
+        if ride:
+            ride.available_seats = min(ride.total_seats, ride.available_seats + count)
+    
+    db.commit()
 
 
 @router.get("", response_model=List[RideSchema])
@@ -62,14 +94,21 @@ def search_travellers(
             dt = datetime.strptime(travel_date, "%Y-%m-%d")
             dt_start = dt.replace(hour=0, minute=0, second=0)
             dt_end = dt.replace(hour=23, minute=59, second=59)
+            
+            # If searching for today, don't show past rides
+            now = datetime.utcnow()
+            effective_start = max(dt_start, now)
+            
             query = query.filter(
-                Ride.departure_time >= dt_start,
+                Ride.departure_time >= effective_start,
                 Ride.departure_time <= dt_end,
             )
         except ValueError:
             pass
     else:
         query = query.filter(Ride.departure_time >= datetime.utcnow())
+
+    _release_expired_seats(db)
 
     rides = query.order_by(Ride.departure_time).all()
 
@@ -82,6 +121,7 @@ def search_travellers(
             price=r.price, rating=r.rating, total_reviews=r.total_reviews,
             amenities=r.amenities, total_seats=r.total_seats,
             available_seats=r.available_seats,
+            image_url=r.image_url,
         ))
     return results
 
@@ -92,21 +132,7 @@ def get_ride_detail(ride_id: str, db: Session = Depends(get_db)):
     if not ride:
         raise HTTPException(status_code=404, detail="Ride not found")
 
-    # Release any expired locked seats (> 5 minutes old)
-    from datetime import timedelta
-    now = datetime.utcnow()
-    expired_threshold = now - timedelta(minutes=5)
-    expired_seats = db.query(Seat).filter(
-        Seat.ride_id == ride_id,
-        Seat.status == "locked",
-        Seat.locked_at <= expired_threshold,
-    ).all()
-    for seat in expired_seats:
-        seat.status = "available"
-        seat.locked_at = None
-    if expired_seats:
-        ride.available_seats = min(ride.total_seats, ride.available_seats + len(expired_seats))
-        db.commit()
+    _release_expired_seats(db, ride_id)
 
     seats = (
         db.query(Seat)
@@ -122,5 +148,6 @@ def get_ride_detail(ride_id: str, db: Session = Depends(get_db)):
         price=ride.price, rating=ride.rating, total_reviews=ride.total_reviews,
         amenities=ride.amenities, total_seats=ride.total_seats,
         available_seats=ride.available_seats,
+        image_url=ride.image_url,
         seats=[SeatSchema.model_validate(s) for s in seats],
     )

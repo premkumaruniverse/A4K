@@ -83,7 +83,7 @@ export default function AdminPanel() {
   const [tab, setTab] = useState('travellers');
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [form, setForm] = useState({ from_city: 'Kharagpur', to_city: 'Kolkata Airport', departure_time: '', arrival_time: '', price: 450, total_seats: 17 });
+  const [form, setForm] = useState({ from_city: 'Kharagpur', to_city: 'Kolkata Airport', departure_time: '', arrival_time: '', price: 450, total_seats: 17, image_url: '' });
 
   if (!user?.is_admin) { navigate('/home'); return null; }
 
@@ -119,7 +119,7 @@ export default function AdminPanel() {
   const startEdit = (t) => {
     setEditTarget(t);
     const fmtLocal = (dt) => dt ? new Date(dt).toISOString().slice(0, 16) : '';
-    setForm({ from_city: t.from_city, to_city: t.to_city, departure_time: fmtLocal(t.departure_time), arrival_time: fmtLocal(t.arrival_time), price: t.price, total_seats: t.total_seats });
+    setForm({ from_city: t.from_city, to_city: t.to_city, departure_time: fmtLocal(t.departure_time), arrival_time: fmtLocal(t.arrival_time), price: t.price, total_seats: t.total_seats, image_url: t.image_url || '' });
     setShowCreate(true);
   };
 
@@ -218,6 +218,7 @@ export default function AdminPanel() {
                 { label: 'Arrival Time',   key: 'arrival_time',   type: 'datetime-local' },
                 { label: 'Price (₹)',      key: 'price',          type: 'number' },
                 { label: 'Total Seats',    key: 'total_seats',    type: 'number' },
+                { label: 'Image URL',      key: 'image_url',      type: 'text' },
               ].map(({ label, key, type }) => (
                 <div key={key}>
                   <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>
