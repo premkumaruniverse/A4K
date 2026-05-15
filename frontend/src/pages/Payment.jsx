@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Smartphone, CreditCard, CheckCircle2, Lock, ArrowLeft, Clock } from 'lucide-react';
+import { ShieldCheck, Smartphone, CreditCard, CheckCircle2, Lock, ArrowLeft, Clock, Tag, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StepBar } from './TravellerList';
 import useBookingStore from '../stores/bookingStore';
@@ -20,6 +20,10 @@ export default function Payment() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [secsLeft, setSecsLeft] = useState(300);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [passengerName, setPassengerName] = useState(user?.name || '');
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     if (!lockedSeat || sagaState === 'CONFIRMED') return;
@@ -42,12 +46,13 @@ export default function Payment() {
   const seat = lockedSeat;
   const baseFare = ride.price;
   const taxes = Math.round(baseFare * 0.05 * 100) / 100;
-  const total = Math.round((baseFare + taxes) * 100) / 100;
+  const total = Math.max(0, Math.round((baseFare + taxes - discount) * 100) / 100);
 
   const handlePay = async () => {
     setLoading(true);
     try {
-      const booking = await initPayment(ride.id, user?.name || user?.phone || 'Traveller');
+      const finalName = isNewUser ? (passengerName || 'New Passenger') : (user?.name || user?.phone || 'Traveller');
+      const booking = await initPayment(ride.id, finalName);
       if (!booking) { setLoading(false); return; }
 
       const confirmed = await verifyPayment();
@@ -94,6 +99,58 @@ export default function Payment() {
       </div>
 
       <div style={{ padding: '16px 20px' }}>
+        {/* Passenger Details Toggle */}
+        <div className="card" style={{ padding: 16, border: 'none', boxShadow: 'var(--shadow-md)', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <User size={20} color="var(--primary)" />
+              <span style={{ fontSize: 14, fontWeight: 700 }}>Booking for someone else?</span>
+            </div>
+            <input type="checkbox" checked={isNewUser} onChange={(e) => setIsNewUser(e.target.checked)} style={{ width: 20, height: 20, accentColor: 'var(--primary)' }} />
+          </div>
+          {isNewUser && (
+            <div style={{ marginTop: 16 }}>
+              <input 
+                type="text" 
+                placeholder="Enter passenger name" 
+                value={passengerName} 
+                onChange={(e) => setPassengerName(e.target.value)}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 14, outline: 'none' }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Coupon Section */}
+        <div className="card" style={{ padding: 16, border: 'none', boxShadow: 'var(--shadow-md)', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <Tag size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 14 }} />
+              <input 
+                type="text" 
+                placeholder="Enter Coupon Code" 
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                style={{ width: '100%', padding: '12px 16px 12px 36px', borderRadius: 12, border: '1px solid var(--border)', fontSize: 14, textTransform: 'uppercase', outline: 'none' }}
+              />
+            </div>
+            <button 
+              onClick={() => {
+                if (couponCode.toUpperCase() === 'FIRST50' || couponCode.toUpperCase() === 'A4K50') {
+                  setDiscount(50);
+                  toast.success('₹50 discount applied!');
+                } else {
+                  toast.error('Invalid coupon code');
+                }
+              }}
+              style={{ padding: '0 20px', background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 800, border: 'none', borderRadius: 12, cursor: 'pointer' }}
+            >
+              Apply
+            </button>
+          </div>
+          {discount > 0 && <p style={{ fontSize: 12, color: 'var(--success)', marginTop: 8, fontWeight: 700 }}>Coupon applied successfully!</p>}
+        </div>
+
         {/* Booking Summary */}
         <div className="card" style={{ padding: 20, border: 'none', boxShadow: 'var(--shadow-md)', marginBottom: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Booking Summary</h3>
@@ -114,7 +171,8 @@ export default function Payment() {
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px dashed var(--border)' }}>
             {[
               { label: 'Base Fare',       value: formatCurrency(baseFare) },
-              { label: 'GST (5%)',         value: formatCurrency(taxes) },
+              { label: 'GST (5%)',        value: formatCurrency(taxes) },
+              ...(discount > 0 ? [{ label: 'Discount', value: `-${formatCurrency(discount)}` }] : []),
             ].map(({ label, value }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{label}</span>

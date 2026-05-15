@@ -186,7 +186,7 @@ export default function SeatSelection() {
                 <p style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>Reserving your seat...</p>
               </div>
             ) : (
-              <SeatGrid seats={ride.seats || []} onSeatSelect={handleSeatSelect} />
+              <SeatGrid seats={ride.seats || []} price={ride.price} onSeatSelect={handleSeatSelect} />
             )}
           </div>
         )}

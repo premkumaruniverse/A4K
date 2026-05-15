@@ -1,7 +1,7 @@
 import useBookingStore from '../stores/bookingStore';
 import useSagaStore from '../stores/sagaStore';
 
-export default function SeatGrid({ seats, onSeatSelect }) {
+export default function SeatGrid({ seats, price = 450, onSeatSelect }) {
   const { selectedSeat } = useBookingStore();
   const { lockedSeat } = useSagaStore();
 
@@ -29,11 +29,12 @@ export default function SeatGrid({ seats, onSeatSelect }) {
   const rows = [];
   // Front row — seat 1
   rows.push({ type: 'front', seats: [seatMap[1]] });
-  // Regular rows — seats 2-17
-  for (let r = 0; r < 8; r++) {
-    const l = seatMap[2 + r * 2];
-    const right = seatMap[3 + r * 2];
-    rows.push({ type: 'regular', seats: [l, right] });
+  // Regular rows — 2+1 layout
+  for (let r = 0; r < Math.ceil((seats.length - 1) / 3); r++) {
+    const l1 = seatMap[2 + r * 3];
+    const l2 = seatMap[3 + r * 3];
+    const right = seatMap[4 + r * 3];
+    rows.push({ type: 'regular', seats: [l1, l2, right] });
   }
 
   const SeatBtn = ({ seat }) => {
@@ -53,8 +54,10 @@ export default function SeatGrid({ seats, onSeatSelect }) {
         disabled={status === 'booked' || status === 'locked'}
         onClick={handleClick}
         title={status === 'locked' ? 'Temporarily reserved' : status === 'booked' ? 'Already booked' : `Seat ${seat.seat_number}`}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}
       >
-        {status === 'selected' ? '✓' : seat.seat_number}
+        <span>{status === 'selected' ? '✓' : seat.seat_number}</span>
+        <span style={{ fontSize: 9, opacity: 0.8, fontWeight: 700 }}>₹{price}</span>
       </button>
     );
   };
@@ -90,16 +93,18 @@ export default function SeatGrid({ seats, onSeatSelect }) {
           {rows.map((row, ri) => (
             <div key={ri}>
               {row.type === 'front' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 40px 1fr', gap: 10 }}>
                   <SeatBtn seat={row.seats[0]} />
+                  <div />
                   <div className="seat-aisle" />
                   <div style={{ height: 50 }} /> {/* driver placeholder */}
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 40px 1fr', gap: 10 }}>
                   <SeatBtn seat={row.seats[0]} />
-                  <div className="seat-aisle">|</div>
                   <SeatBtn seat={row.seats[1]} />
+                  <div className="seat-aisle">|</div>
+                  <SeatBtn seat={row.seats[2]} />
                 </div>
               )}
             </div>
