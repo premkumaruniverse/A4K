@@ -34,7 +34,7 @@ def _is_valid_route(from_city: str, to_city: str) -> bool:
 def get_routes():
     """Return the two fixed routes available."""
     return {"routes": VALID_ROUTES}
-}
+
 
 
 def _release_expired_seats(db: Session, ride_id: Optional[str] = None):

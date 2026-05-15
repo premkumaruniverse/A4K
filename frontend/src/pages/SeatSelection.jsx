@@ -17,14 +17,20 @@ function LockTimer({ expiresAt, onExpire }) {
 
   useEffect(() => {
     if (!expiresAt) return;
+    let called = false;
     const update = () => {
       const diff = Math.max(0, Math.floor((new Date(expiresAt) - Date.now()) / 1000));
       setSecsLeft(diff);
-      if (diff === 0) onExpire?.();
+      if (diff === 0 && !called) {
+        called = true;
+        onExpire?.();
+      }
     };
     update();
     const id = setInterval(update, 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+    };
   }, [expiresAt, onExpire]);
 
   const pct = Math.min(100, (secsLeft / 300) * 100);
@@ -72,10 +78,20 @@ export default function SeatSelection() {
     }
   }, [sagaState, navigate]);
 
+  // Sync auth modal visibility with saga state
+  useEffect(() => {
+    if (sagaState === 'AUTH_REQUIRED') {
+      setShowAuth(true);
+    } else if (sagaState === 'IDLE' || sagaState === 'SEAT_LOCKED') {
+      // If we are locked but not yet requiring auth, or idle, hide modal
+      if (sagaState === 'IDLE') setShowAuth(false);
+    }
+  }, [sagaState]);
+
   const handleSeatSelect = useCallback(async (seat) => {
     // Reset any prior lock
     if (lockedSeat?.seat_id && lockedSeat.seat_id !== seat.id) {
-      await rollback();
+      rollback(); // trigger cleanup in background
     }
     setSeat(seat);
 
@@ -88,11 +104,12 @@ export default function SeatSelection() {
 
     // If already logged in, skip auth
     if (token && user) {
+      console.log('User logged in, skipping auth');
       authDone();
       navigate('/payment');
     } else {
+      console.log('User not logged in, requiring auth');
       requireAuth();
-      setShowAuth(true);
     }
   }, [id, lockedSeat, lockSeat, rollback, requireAuth, authDone, token, user, navigate, setSeat, queryClient]);
 

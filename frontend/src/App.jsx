@@ -30,10 +30,11 @@ export default function App() {
           <Route path="/payment"     element={<Payment />} />
           <Route path="/confirmation" element={<Confirmation />} />
 
+          <Route path="/profile"       element={<Profile />} />
+
           <Route element={<ProtectedRoute />}>
             <Route path="/bookings"      element={<MyBookings />} />
             <Route path="/bookings/:id"  element={<BookingDetail />} />
-            <Route path="/profile"       element={<Profile />} />
             <Route path="/admin"         element={<AdminPanel />} />
           </Route>
 

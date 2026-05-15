@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
@@ -14,6 +14,7 @@ from app.schemas.ride import (
     CreateTravellerRequest, UpdateTravellerRequest,
 )
 from app.utils.dependencies import get_current_user
+from app.services.cloudinary_service import CloudinaryService
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -204,3 +205,16 @@ def promote_user_to_admin(
     user.is_admin = True
     db.commit()
     return {"message": f"User {phone} promoted to admin"}
+
+
+@router.post("/upload-image")
+async def upload_vehicle_image(
+    file: UploadFile = File(...),
+    _admin: User = Depends(_require_admin),
+):
+    """Uploads an image to Cloudinary and returns the URL."""
+    contents = await file.read()
+    image_url = CloudinaryService.upload_image(contents)
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
+    return {"image_url": image_url}

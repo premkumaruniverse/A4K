@@ -39,11 +39,19 @@ export default function SeatGrid({ seats, onSeatSelect }) {
   const SeatBtn = ({ seat }) => {
     const status = getSeatStatus(seat);
     if (!seat) return <div style={{ height: 50 }} />;
+    
+    const handleClick = () => {
+      console.log('Seat clicked:', seat.seat_number, 'Status:', status);
+      if (status === 'available' && onSeatSelect) {
+        onSeatSelect(seat);
+      }
+    };
+
     return (
       <button
         className={`seat-btn ${status}`}
         disabled={status === 'booked' || status === 'locked'}
-        onClick={() => status === 'available' && onSeatSelect && onSeatSelect(seat)}
+        onClick={handleClick}
         title={status === 'locked' ? 'Temporarily reserved' : status === 'booked' ? 'Already booked' : `Seat ${seat.seat_number}`}
       >
         {status === 'selected' ? '✓' : seat.seat_number}

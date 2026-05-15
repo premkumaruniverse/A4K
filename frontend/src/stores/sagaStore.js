@@ -35,7 +35,7 @@ const useSagaStore = create((set, get) => ({
           seat_number: data.seat_number,
           ride_id: rideId,
         },
-        lockExpiresAt: data.expires_at,
+        lockExpiresAt: new Date(Date.now() + data.lock_duration_seconds * 1000).toISOString(),
       });
       return true;
     } catch (err) {
@@ -113,13 +113,7 @@ const useSagaStore = create((set, get) => ({
   // ── Compensation: Release seat ─────────────────────────────────────
   rollback: async () => {
     const { lockedSeat } = get();
-    if (lockedSeat?.seat_id) {
-      try {
-        await travellerAPI.releaseSeat(lockedSeat.seat_id);
-      } catch (_) {
-        // best-effort
-      }
-    }
+    // Clear state immediately for UI responsiveness
     set({
       sagaState: 'IDLE',
       lockedSeat: null,
@@ -128,6 +122,14 @@ const useSagaStore = create((set, get) => ({
       lockExpiresAt: null,
       error: null,
     });
+
+    if (lockedSeat?.seat_id) {
+      try {
+        await travellerAPI.releaseSeat(lockedSeat.seat_id);
+      } catch (_) {
+        // best-effort cleanup
+      }
+    }
   },
 
   // ── Reset after confirmed ──────────────────────────────────────────
