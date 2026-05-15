@@ -20,10 +20,13 @@ function sortRides(rides, filter) {
 
 export default function SearchResults() {
   const navigate = useNavigate();
-  const { searchParams } = useBookingStore();
+  const { selectedRoute, travelDate } = useBookingStore();
   const [activeFilter, setFilter] = useState('Departure');
 
-  const { from, to, date, type } = searchParams;
+  const from = selectedRoute?.from || 'Kharagpur';
+  const to = selectedRoute?.to || 'Kolkata Airport';
+  const date = travelDate || new Date().toISOString().split('T')[0];
+  const type = 'traveller';
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['rides', from, to, date, type],
