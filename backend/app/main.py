@@ -7,9 +7,14 @@ import app.models  # Ensure all ORM models are registered before create_all
 
 from app.routers import auth, rides, bookings, payment, admin
 
-# ── Create all tables ──────────────────────────────────────────────────────────
-Base.metadata.create_all(bind=engine)
+from sqlalchemy import text
 
+# ── Create all tables ──────────────────────────────────────────────────────────
+if "postgres" in settings.DATABASE_URL:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS airport4kgp"))
+
+Base.metadata.create_all(bind=engine)
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="KGP Shuttle Booking API",

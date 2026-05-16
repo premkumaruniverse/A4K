@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, UniqueConstraint, DateTime
+from sqlalchemy import Column, String, ForeignKey, UniqueConstraint, DateTime, Float
 from sqlalchemy.orm import relationship
 import uuid
 from app.database import Base
@@ -14,6 +14,7 @@ class Seat(Base):
     # available / locked / booked
     status = Column(String(10), default="available", index=True)
     locked_at = Column(DateTime, nullable=True)       # timestamp when locked (saga step 1)
+    price = Column(Float, nullable=True)
 
     ride = relationship("Ride", back_populates="seats")
 

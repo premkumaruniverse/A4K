@@ -12,7 +12,7 @@ export default function Home() {
   const { selectedRoute, travelDate, setRoute, setDate } = useBookingStore();
 
   const [route, setLocalRoute] = useState(selectedRoute?.key || 'KGP_CCU');
-  const [date, setLocalDate]   = useState(travelDate || todayStr());
+  const [date, setLocalDate] = useState(travelDate || todayStr());
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -45,7 +45,7 @@ export default function Home() {
             <h1 style={{ fontSize: 24, fontWeight: 900, fontFamily: 'Outfit, var(--font-sans)', letterSpacing: '-0.02em' }}>
               {user?.name ? `Hi, ${user.name.split(' ')[0]}!` : 'KGP Shuttle'}
             </h1>
-            <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>Kharagpur -&gt; Airport</p>
+            <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>Kharagpur ↔ Kolkata Airport</p>
           </div>
           <button
             onClick={() => navigate(user ? '/profile' : '/profile')}
@@ -60,12 +60,25 @@ export default function Home() {
       {/* Search Card */}
       <div style={{ padding: '0 20px', marginTop: -36, zIndex: 10, position: 'relative' }}>
         <div className="card fade-up" style={{ boxShadow: 'var(--shadow-xl)', padding: 24, border: 'none', borderRadius: 24 }}>
-          {/* Simple Route Display */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, padding: '16px', background: 'var(--primary-light)', borderRadius: 16 }}>
-            <MapPin size={20} color="var(--primary)" />
-            <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>Kharagpur -&gt; Airport</span>
+          {/* Route Label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <MapPin size={16} color="var(--primary)" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>Select Route</span>
           </div>
 
+          {/* Route Toggle */}
+          <div className="route-toggle" style={{ marginBottom: 20 }}>
+            {Object.values(ROUTES).map((r) => (
+              <button
+                key={r.key}
+                className={`route-btn ${route === r.key ? 'active' : ''}`}
+                onClick={() => setLocalRoute(r.key)}
+              >
+                {/* <span className="route-btn-label">{r.key === 'KGP_CCU' ? 'From KGP' : 'From CCU'}</span> */}
+                <span className="route-btn-cities">{r.from}<br />→ {r.to}</span>
+              </button>
+            ))}
+          </div>
 
           {/* Date */}
           <div style={{ position: 'relative', marginBottom: 24 }}>

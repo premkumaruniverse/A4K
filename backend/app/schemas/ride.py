@@ -8,6 +8,7 @@ class SeatSchema(BaseModel):
     seat_number: str
     seat_type: str
     status: str   # available / locked / booked
+    price: Optional[float] = None
 
     model_config = {"from_attributes": True}
 

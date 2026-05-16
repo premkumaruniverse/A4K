@@ -96,7 +96,7 @@ def search_travellers(
             dt_end = dt.replace(hour=23, minute=59, second=59)
             
             # If searching for today, don't show past rides
-            now = datetime.utcnow()
+            now = datetime.now()
             effective_start = max(dt_start, now)
             
             query = query.filter(
@@ -106,7 +106,7 @@ def search_travellers(
         except ValueError:
             pass
     else:
-        query = query.filter(Ride.departure_time >= datetime.utcnow())
+        query = query.filter(Ride.departure_time >= datetime.now())
 
     _release_expired_seats(db)
 
@@ -151,3 +151,11 @@ def get_ride_detail(ride_id: str, db: Session = Depends(get_db)):
         image_url=ride.image_url,
         seats=[SeatSchema.model_validate(s) for s in seats],
     )
+
+@router.get("/coupons/{code}")
+def verify_coupon(code: str, db: Session = Depends(get_db)):
+    from app.models.coupon import Coupon
+    coupon = db.query(Coupon).filter(Coupon.code == code.upper(), Coupon.is_active == True).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Invalid or expired coupon")
+    return {"code": coupon.code, "discount_amount": coupon.discount_amount}

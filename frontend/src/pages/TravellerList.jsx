@@ -6,7 +6,7 @@ import useBookingStore from '../stores/bookingStore';
 import { formatTime, formatDuration, formatCurrency } from '../utils/helpers';
 
 function StepBar({ step }) {
-  const steps = ['Route', 'Seat', 'Auth', 'Pay', 'Done'];
+  const steps = ['Route', 'Auth', 'Seat', 'Pay', 'Done'];
   return (
     <div className="step-bar">
       {steps.map((s, i) => {
@@ -73,7 +73,7 @@ export default function TravellerList() {
 
       <div style={{ padding: '16px 16px 32px' }}>
         {isLoading ? (
-          [1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 120, marginBottom: 12 }} />)
+          [1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 120, marginBottom: 12 }} />)
         ) : isError ? (
           <div className="empty-state">
             <div className="empty-icon"><AlertCircle size={36} color="var(--danger)" /></div>
@@ -116,7 +116,7 @@ export default function TravellerList() {
                     ) : (
                       <div style={{ textAlign: 'right' }}>
                         <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit, var(--font-sans)' }}>{formatCurrency(t.price)}</p>
-                        <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>per seat</p>
+                        <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>Price Starting From</p>
                       </div>
                     )}
                   </div>
@@ -139,10 +139,17 @@ export default function TravellerList() {
 
                   {/* Seats + CTA */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="seats-indicator">
-                      <div className={`seats-dot ${seatsColor}`} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                        {isFull ? 'No seats left' : `${t.available_seats} seat${t.available_seats !== 1 ? 's' : ''} available`}
+                    <div className="seats-indicator" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className={`seats-dot ${seatsColor}`} style={{ width: 10, height: 10, borderRadius: '50%' }} />
+                      <span style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: isFull ? 'var(--danger)' : 'var(--success)',
+                        background: isFull ? 'var(--danger-light)' : 'var(--success-light)',
+                        padding: '4px 10px',
+                        borderRadius: 6
+                      }}>
+                        {isFull ? 'No seats left' : `${t.available_seats} Available Seats`}
                       </span>
                     </div>
                     {!isFull && (

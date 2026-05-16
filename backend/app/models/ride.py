@@ -22,7 +22,7 @@ class Ride(Base):
     amenities_json = Column(Text, default="[]")
     total_seats = Column(Integer, default=40)
     available_seats = Column(Integer, default=40)
-    image_url = Column(String(255), nullable=True)
+    image_url = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

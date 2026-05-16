@@ -200,7 +200,7 @@ export default function SeatSelection() {
               <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Selected</p>
               <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)' }}>Seat {selectedSeat.seat_number}</p>
             </div>
-            <p style={{ fontSize: 18, fontWeight: 800 }}>{formatCurrency(currentRide?.price || 0)}</p>
+            <p style={{ fontSize: 18, fontWeight: 800 }}>{formatCurrency(selectedSeat.price || currentRide?.price || 0)}</p>
           </div>
         </div>
       )}

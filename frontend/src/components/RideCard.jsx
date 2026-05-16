@@ -96,15 +96,15 @@ export default function RideCard({ ride }) {
                 {ride.amenities?.slice(0, 3).map((a) => <AmenityTag key={a} name={a} />)}
                 {ride.amenities?.length > 3 && <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', padding: '4px' }}>+{ride.amenities.length - 3} move</span>}
              </div>
-             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: ride.available_seats < 5 ? 'var(--danger)' : 'var(--success)', fontSize: 14, fontWeight: 800, background: ride.available_seats < 5 ? '#fef2f2' : '#f0fdf4', padding: '6px 10px', borderRadius: 8, marginTop: 8 }}>
-                <Users size={16} />
-                <span>{ride.available_seats} Available Seats</span>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: ride.available_seats < 5 ? 'var(--danger)' : 'var(--success)', fontSize: 12, fontWeight: 600 }}>
+                <Users size={14} />
+                <span>{ride.available_seats} seats left</span>
              </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 2 }}>Price Starting From</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)', marginTop: -4 }}>{formatCurrency(ride.price)}</p>
+            <p style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)' }}>{formatCurrency(ride.price)}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginTop: -2 }}>per seat</p>
           </div>
         </div>
       </div>
