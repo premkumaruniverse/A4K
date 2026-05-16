@@ -43,6 +43,7 @@ class UserResponse(BaseModel):
     phone: str
     name: Optional[str] = None
     email: Optional[str] = None
+    profile_photo_url: Optional[str] = None
     is_admin: bool = False
 
     model_config = {"from_attributes": True}
@@ -57,3 +58,4 @@ class AuthResponse(BaseModel):
 class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
+    profile_photo_url: Optional[str] = None

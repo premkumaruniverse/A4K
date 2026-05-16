@@ -30,6 +30,13 @@ export const authAPI = {
   verifyOTP:     (phone, otp)   => api.post('/auth/verify-otp', { phone, otp }),
   getProfile:    ()             => api.get('/auth/me'),
   updateProfile: (data)         => api.put('/auth/me', data),
+  uploadPhoto:   (file)         => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/auth/upload-photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 };
 
 // ── Travellers (fixed-route rides) ──────────────────────────────────────────
