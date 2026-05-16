@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
@@ -13,6 +13,7 @@ from app.services.otp_service import send_otp, verify_otp
 from app.utils.auth import create_access_token
 from app.utils.dependencies import get_current_user
 from app.config import settings
+from app.services.cloudinary_service import CloudinaryService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -64,6 +65,21 @@ def update_profile(
         current_user.name = request.name
     if request.email is not None:
         current_user.email = request.email
+    if request.profile_photo_url is not None:
+        current_user.profile_photo_url = request.profile_photo_url
     db.commit()
     db.refresh(current_user)
     return UserResponse.model_validate(current_user)
+
+
+@router.post("/upload-photo")
+async def upload_profile_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """Uploads a profile photo to Cloudinary and returns the URL."""
+    contents = await file.read()
+    image_url = CloudinaryService.upload_image(contents)
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
+    return {"image_url": image_url}

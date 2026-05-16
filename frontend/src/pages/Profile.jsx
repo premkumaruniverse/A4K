@@ -1,15 +1,55 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Ticket, Settings, Shield, Phone, ChevronRight, User, LogIn } from 'lucide-react';
+import { LogOut, Ticket, Settings, Shield, Phone, ChevronRight, User, LogIn, Camera, Edit2, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import BottomNav from '../components/BottomNav';
 import InlineAuth from '../components/InlineAuth';
 import useAuthStore from '../stores/authStore';
+import { authAPI } from '../services/api';
+
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 800 }}>{title}</h2>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, updateUser } = useAuthStore();
   const [showAuth, setShowAuth] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    profile_photo_url: user?.profile_photo_url || ''
+  });
+
   const isAdmin = user?.is_admin;
+
+  // Sync formData with user state
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        profile_photo_url: user.profile_photo_url || ''
+      });
+    }
+  }, [user, showEdit]);
 
   if (!token || !user) {
     return (
@@ -35,17 +75,68 @@ export default function Profile() {
     );
   }
 
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await authAPI.updateProfile(formData);
+      updateUser(res.data);
+      toast.success('Profile updated!');
+      setShowEdit(false);
+    } catch (err) {
+      toast.error('Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const tId = toast.loading('Uploading photo...');
+    try {
+      const res = await authAPI.uploadPhoto(file);
+      setFormData({ ...formData, profile_photo_url: res.data.image_url });
+      toast.success('Photo uploaded!', { id: tId });
+    } catch (err) {
+      toast.error('Failed to upload', { id: tId });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const initials = (user.name || user.phone || 'U').slice(0, 2).toUpperCase();
 
   return (
     <div className="page" style={{ paddingBottom: 90 }}>
       {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', padding: '44px 24px 60px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 900, marginBottom: 20 }}>Profile</h1>
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, position: 'relative', zIndex: 10 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 900 }}>Profile</h1>
+          <button 
+            onClick={() => setShowEdit(true)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, 
+              padding: '6px 12px', borderRadius: 20, 
+              background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', 
+              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              zIndex: 20, position: 'relative'
+            }}
+          >
+            <Edit2 size={14} /> Edit
+          </button>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div className="avatar-ring">
-            <div className="avatar-inner">{initials}</div>
+            {user.profile_photo_url ? (
+              <img src={user.profile_photo_url} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} alt="Profile" />
+            ) : (
+              <div className="avatar-inner">{initials}</div>
+            )}
           </div>
           <div>
             <p style={{ fontSize: 20, fontWeight: 800 }}>{user.name || 'Traveller'}</p>
@@ -84,6 +175,50 @@ export default function Profile() {
           <p style={{ flex: 1, fontSize: 15, fontWeight: 600, color: 'var(--danger)', textAlign: 'left' }}>Sign Out</p>
         </button>
       </div>
+
+      {showEdit && (
+        <Modal title="Edit Profile" onClose={() => setShowEdit(false)}>
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 10px' }}>
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--bg)', overflow: 'hidden', border: '3px solid var(--primary-light)' }}>
+                {formData.profile_photo_url ? (
+                  <img src={formData.profile_photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                    <User size={40} />
+                  </div>
+                )}
+              </div>
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                disabled={uploading}
+                style={{ position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+              >
+                {uploading ? <Loader2 size={16} className="spin" /> : <Camera size={16} />}
+              </button>
+              <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handlePhotoUpload} />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Full Name</label>
+              <input required className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Your Name" />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Email Address</label>
+              <input type="email" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="your@email.com" />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <button type="button" className="btn btn-outline" onClick={() => setShowEdit(false)} style={{ flex: 1 }}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={loading || uploading} style={{ flex: 1 }}>
+                {loading ? <Loader2 size={18} className="spin" /> : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       <BottomNav />
     </div>
