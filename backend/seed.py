@@ -15,7 +15,14 @@ from app.models.seat import Seat
 from app.models.user import User
 import app.models  # register all models
 
+from sqlalchemy import text
+from app.config import settings
+
 # ── Drop & recreate ────────────────────────────────────────────────────────────
+if "postgres" in settings.DATABASE_URL:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS airport4kgp"))
+
 Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
@@ -69,7 +76,7 @@ for day_offset in range(30):
             to_city="Kolkata Airport",
             departure_time=dep,
             arrival_time=arr,
-            price=op["price"],
+            price=op["price"] - 20,
             rating=op["rating"],
             total_reviews=100 + (day_offset * 5) + (i * 10),
             total_seats=17,
@@ -82,7 +89,8 @@ for day_offset in range(30):
         db.flush()
 
         for n in range(1, 18):
-            db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available"))
+            seat_price = ride.price + ((n % 3) * 50)
+            db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available", price=seat_price))
         ride_count += 1
 
     for i, time_str in enumerate(CCU_KGP_TIMES):
@@ -99,7 +107,7 @@ for day_offset in range(30):
             to_city="Kharagpur",
             departure_time=dep,
             arrival_time=arr,
-            price=op["price"],
+            price=op["price"] - 20,
             rating=op["rating"],
             total_reviews=90 + (day_offset * 4) + (i * 8),
             total_seats=17,
@@ -112,7 +120,8 @@ for day_offset in range(30):
         db.flush()
 
         for n in range(1, 18):
-            db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available"))
+            seat_price = ride.price + ((n % 3) * 50)
+            db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available", price=seat_price))
         ride_count += 1
 
 # ── Create admin user ──────────────────────────────────────────────────────────

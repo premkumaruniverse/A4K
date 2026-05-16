@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Ticket, Settings, Shield, Phone, ChevronRight, User, LogIn } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
+import InlineAuth from '../components/InlineAuth';
 import useAuthStore from '../stores/authStore';
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user, token, logout } = useAuthStore();
+  const [showAuth, setShowAuth] = useState(false);
   const isAdmin = user?.is_admin;
 
   if (!token || !user) {
@@ -20,13 +23,14 @@ export default function Profile() {
         </div>
         <div style={{ padding: 24 }}>
           <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>
-            You'll be asked to login when you select a seat. Your booking data is safely linked to your phone number.
+            Login safely with your phone number to manage bookings and view your trips.
           </p>
-          <button className="btn btn-primary" style={{ height: 54 }} onClick={() => navigate('/home')}>
-            <LogIn size={18} /> Book a Trip to Login
+          <button className="btn btn-primary" style={{ height: 54, marginBottom: 16 }} onClick={() => setShowAuth(true)}>
+            <LogIn size={18} /> Login
           </button>
         </div>
         <BottomNav />
+        {showAuth && <InlineAuth onSuccess={() => setShowAuth(false)} onCancel={() => setShowAuth(false)} />}
       </div>
     );
   }

@@ -41,6 +41,7 @@ export const travellerAPI = {
   getDetail:    (id)            => api.get(`/rides/${id}`),
   lockSeat:     (data)          => api.post('/bookings/lock-seat', data),
   releaseSeat:  (seatId)        => api.delete(`/bookings/release-seat/${seatId}`),
+  verifyCoupon: (code)          => api.get(`/rides/coupons/${code}`),
 };
 
 // ── Bookings ────────────────────────────────────────────────────────────────
@@ -64,6 +65,10 @@ export const adminAPI = {
   updateTraveller:   (id, d)  => api.put(`/admin/travellers/${id}`, d),
   deleteTraveller:   (id)     => api.delete(`/admin/travellers/${id}`),
   getBookings:       ()       => api.get('/admin/bookings'),
+  getCoupons:        ()       => api.get('/admin/coupons'),
+  createCoupon:      (data)   => api.post('/admin/coupons', data),
+  updateCoupon:      (id, d)  => api.put(`/admin/coupons/${id}`, d),
+  deleteCoupon:      (id)     => api.delete(`/admin/coupons/${id}`),
   promoteAdmin:      (phone)  => api.post(`/admin/promote/${phone}`),
   uploadImage:       (file)   => {
     const formData = new FormData();

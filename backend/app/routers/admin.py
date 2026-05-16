@@ -15,6 +15,8 @@ from app.schemas.ride import (
 )
 from app.utils.dependencies import get_current_user
 from app.services.cloudinary_service import CloudinaryService
+from app.models.coupon import Coupon
+from app.schemas.coupon import CouponSchema, CouponCreate, CouponUpdate
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -89,7 +91,8 @@ def create_traveller(
     # Create seats numbered 1..total_seats
     seats = []
     for num in range(1, request.total_seats + 1):
-        seat = Seat(ride_id=ride.id, seat_number=str(num), seat_type="seater", status="available")
+        seat_price = ride.price + ((num % 3) * 50)
+        seat = Seat(ride_id=ride.id, seat_number=str(num), seat_type="seater", status="available", price=seat_price)
         db.add(seat)
         seats.append(seat)
 
@@ -126,6 +129,10 @@ def update_traveller(
         ride.arrival_time = request.arrival_time
     if request.price is not None:
         ride.price = request.price
+        seats = db.query(Seat).filter(Seat.ride_id == ride.id).all()
+        for seat in seats:
+            seat_num = int(seat.seat_number)
+            seat.price = ride.price + ((seat_num % 3) * 50)
     if request.is_active is not None:
         ride.is_active = request.is_active
     if request.image_url is not None:
@@ -218,3 +225,69 @@ async def upload_vehicle_image(
     if not image_url:
         raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
     return {"image_url": image_url}
+
+# ── Coupons ────────────────────────────────────────────────────────────────────
+@router.get("/coupons", response_model=List[CouponSchema])
+def list_coupons(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(_require_admin),
+):
+    return db.query(Coupon).order_by(Coupon.is_active.desc(), Coupon.code).all()
+
+@router.post("/coupons", response_model=CouponSchema, status_code=status.HTTP_201_CREATED)
+def create_coupon(
+    request: CouponCreate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(_require_admin),
+):
+    existing = db.query(Coupon).filter(Coupon.code == request.code.upper()).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Coupon code already exists")
+    
+    coupon = Coupon(
+        code=request.code.upper(),
+        discount_amount=request.discount_amount,
+        is_active=request.is_active
+    )
+    db.add(coupon)
+    db.commit()
+    db.refresh(coupon)
+    return coupon
+
+@router.put("/coupons/{coupon_id}", response_model=CouponSchema)
+def update_coupon(
+    coupon_id: str,
+    request: CouponUpdate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(_require_admin),
+):
+    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+        
+    if request.code is not None:
+        existing = db.query(Coupon).filter(Coupon.code == request.code.upper(), Coupon.id != coupon_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Coupon code already exists")
+        coupon.code = request.code.upper()
+    if request.discount_amount is not None:
+        coupon.discount_amount = request.discount_amount
+    if request.is_active is not None:
+        coupon.is_active = request.is_active
+        
+    db.commit()
+    db.refresh(coupon)
+    return coupon
+
+@router.delete("/coupons/{coupon_id}")
+def delete_coupon(
+    coupon_id: str,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(_require_admin),
+):
+    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    db.delete(coupon)
+    db.commit()
+    return {"message": "Coupon deleted"}
