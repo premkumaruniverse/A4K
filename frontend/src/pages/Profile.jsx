@@ -40,6 +40,17 @@ export default function Profile() {
 
   const isAdmin = user?.is_admin;
 
+  // Sync formData with user state
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        profile_photo_url: user.profile_photo_url || ''
+      });
+    }
+  }, [user, showEdit]);
+
   if (!token || !user) {
     return (
       <div className="page" style={{ paddingBottom: 90 }}>
@@ -107,9 +118,14 @@ export default function Profile() {
           <h1 style={{ fontSize: 20, fontWeight: 900 }}>Profile</h1>
           <button 
             onClick={() => setShowEdit(true)}
-            style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, 
+              padding: '6px 12px', borderRadius: 20, 
+              background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', 
+              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' 
+            }}
           >
-            <Edit2 size={16} />
+            <Edit2 size={14} /> Edit
           </button>
         </div>
 
