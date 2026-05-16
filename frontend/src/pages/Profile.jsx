@@ -25,7 +25,7 @@ function Modal({ title, onClose, children }) {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, token, logout, setUser } = useAuthStore();
+  const { user, token, logout, updateUser } = useAuthStore();
   const [showAuth, setShowAuth] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export default function Profile() {
     setLoading(true);
     try {
       const res = await authAPI.updateProfile(formData);
-      setUser(res.data);
+      updateUser(res.data);
       toast.success('Profile updated!');
       setShowEdit(false);
     } catch (err) {
