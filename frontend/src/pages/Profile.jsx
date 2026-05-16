@@ -112,9 +112,9 @@ export default function Profile() {
     <div className="page" style={{ paddingBottom: 90 }}>
       {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))', padding: '44px 24px 60px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, position: 'relative', zIndex: 10 }}>
           <h1 style={{ fontSize: 20, fontWeight: 900 }}>Profile</h1>
           <button 
             onClick={() => setShowEdit(true)}
@@ -122,7 +122,8 @@ export default function Profile() {
               display: 'flex', alignItems: 'center', gap: 6, 
               padding: '6px 12px', borderRadius: 20, 
               background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', 
-              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' 
+              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              zIndex: 20, position: 'relative'
             }}
           >
             <Edit2 size={14} /> Edit
