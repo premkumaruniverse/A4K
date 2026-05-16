@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Ticket, Settings, Shield, Phone, ChevronRight, User, LogIn, Camera, Edit2, X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
