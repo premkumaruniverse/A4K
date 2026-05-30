@@ -15,7 +15,7 @@ const METHODS = [
 
 export default function Payment() {
   const navigate = useNavigate();
-  const { selectedTraveller, selectedSeat, setCurrentBooking, reset } = useBookingStore();
+  const { selectedTraveller, selectedCab, setCurrentBooking, reset } = useBookingStore();
   const { sagaState, lockedSeat, lockExpiresAt, paymentMethod, setPaymentMethod, initPayment, verifyPayment, rollback, error } = useSagaStore();
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -25,8 +25,10 @@ export default function Payment() {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
+  const isCabMode = !!selectedCab && !selectedTraveller;
+
   useEffect(() => {
-    if (!lockedSeat || sagaState === 'CONFIRMED') return;
+    if (isCabMode || !lockedSeat || sagaState === 'CONFIRMED') return;
     if (!lockExpiresAt) return;
     const update = () => {
       const diff = Math.max(0, Math.floor((new Date(lockExpiresAt) - Date.now()) / 1000));
@@ -36,15 +38,14 @@ export default function Payment() {
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [lockExpiresAt, sagaState, navigate, lockedSeat]);
+  }, [lockExpiresAt, sagaState, navigate, lockedSeat, isCabMode]);
 
   // Redirect if prerequisites not met
-  if (!lockedSeat || !selectedTraveller) { navigate('/home'); return null; }
-  if (sagaState === 'IDLE' && !lockedSeat) { navigate('/home'); return null; }
+  if (!isCabMode && (!lockedSeat || !selectedTraveller)) { navigate('/home'); return null; }
 
   const ride = selectedTraveller;
   const seat = lockedSeat;
-  const baseFare = seat.price || ride.price;
+  const baseFare = isCabMode ? selectedCab.fare : (seat?.price || ride?.price || 0);
   const taxes = Math.round((baseFare - discount) * 0.05 * 100) / 100;
   const total = Math.round((baseFare - discount + taxes) * 100) / 100;
 
@@ -64,6 +65,37 @@ export default function Payment() {
     setLoading(true);
     try {
       const finalName = isNewUser ? (passengerName || 'Traveller') : (user?.name || user?.phone || 'Traveller');
+
+      if (isCabMode) {
+        // Cab booking: mock confirmation (no seat lock / ride_id in DB)
+        await new Promise(r => setTimeout(r, 1200));
+        const mockBooking = {
+          id: 'cab-' + Date.now(),
+          booking_ref: 'CB' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+          status: 'confirmed',
+          payment_status: 'paid',
+          total_price: total,
+          base_fare: baseFare,
+          taxes,
+          ride: {
+            type: 'cab',
+            operator_name: selectedCab.name,
+            from_city: selectedCab.from_city,
+            to_city: selectedCab.to_city,
+            departure_time: new Date().toISOString(),
+            arrival_time: new Date(Date.now() + 90 * 60000).toISOString(),
+            price: baseFare,
+          },
+          seat_numbers: ['—'],
+          passengers: [{ name: finalName }],
+          cab: selectedCab,
+        };
+        setCurrentBooking(mockBooking);
+        reset();
+        navigate('/confirmation');
+        return;
+      }
+
       const booking = await initPayment(ride.id, finalName);
       if (!booking) { setLoading(false); return; }
 
@@ -102,13 +134,15 @@ export default function Payment() {
         <StepBar step={3} />
       </div>
 
-      {/* Seat timer */}
-      <div style={{ margin: '16px 20px 0' }}>
-        <div className="lock-timer">
-          <Clock size={14} />
-          <span>Seat held for <strong>{m}:{s.toString().padStart(2,'0')}</strong></span>
+      {/* Seat timer — shuttle only */}
+      {!isCabMode && (
+        <div style={{ margin: '16px 20px 0' }}>
+          <div className="lock-timer">
+            <Clock size={14} />
+            <span>Seat held for <strong>{m}:{s.toString().padStart(2,'0')}</strong></span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div style={{ padding: '16px 20px' }}>
         {/* Booking Summary */}
@@ -138,13 +172,19 @@ export default function Payment() {
         <div className="card" style={{ padding: 20, border: 'none', boxShadow: 'var(--shadow-md)', marginBottom: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Booking Summary</h3>
 
-          {[
+          {(isCabMode ? [
+            { label: 'Vehicle',    value: selectedCab.name },
+            { label: 'Type',       value: selectedCab.type },
+            { label: 'Route',      value: `${selectedCab.from_city} → ${selectedCab.to_city}` },
+            { label: 'Driver',     value: selectedCab.driver.name },
+            { label: 'ETA',        value: `${selectedCab.eta_minutes} min`, bold: true },
+          ] : [
             { label: 'Route',      value: `${ride.from_city} → ${ride.to_city}` },
             { label: 'Departure',  value: formatTime(ride.departure_time) },
             { label: 'Arrival',    value: formatTime(ride.arrival_time) },
             { label: 'Seat',       value: `Seat #${seat.seat_number}`, bold: true },
             { label: 'Operator',   value: ride.operator_name },
-          ].map(({ label, value, bold }) => (
+          ]).map(({ label, value, bold }) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--bg)' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
               <span style={{ fontSize: 13, fontWeight: bold ? 800 : 700, color: bold ? 'var(--primary)' : 'var(--text-primary)' }}>{value}</span>
@@ -225,7 +265,7 @@ export default function Payment() {
             <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Total Amount</p>
             <p style={{ fontSize: 26, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit,var(--font-sans)' }}>{formatCurrency(total)}</p>
           </div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)' }}>Seat #{seat.seat_number} Held</p>
+          {!isCabMode && <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)' }}>Seat #{seat?.seat_number} Held</p>}
         </div>
         <button className="btn btn-primary" onClick={handlePay} disabled={loading || !paymentMethod} style={{ height: 56, fontSize: 15 }}>
           {loading ? (

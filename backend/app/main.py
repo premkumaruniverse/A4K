@@ -5,7 +5,7 @@ from app.config import settings
 from app.database import engine, Base
 import app.models  # Ensure all ORM models are registered before create_all
 
-from app.routers import auth, rides, bookings, payment, admin
+from app.routers import auth, rides, bookings, payment, admin, cabs
 
 from sqlalchemy import text
 
@@ -40,6 +40,7 @@ app.include_router(rides.router,    prefix=PREFIX)
 app.include_router(bookings.router, prefix=PREFIX)
 app.include_router(payment.router,  prefix=PREFIX)
 app.include_router(admin.router,    prefix=PREFIX)
+app.include_router(cabs.router,     prefix=PREFIX)
 
 
 @app.get("/", tags=["Health"])
