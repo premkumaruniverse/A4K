@@ -137,9 +137,9 @@ def get_ride_detail(ride_id: str, db: Session = Depends(get_db)):
     seats = (
         db.query(Seat)
         .filter(Seat.ride_id == ride_id)
-        .order_by(Seat.seat_number)
         .all()
     )
+    seats.sort(key=lambda s: int(s.seat_number))
 
     return RideDetailSchema(
         id=ride.id, type=ride.type, operator_name=ride.operator_name,

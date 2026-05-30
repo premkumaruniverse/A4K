@@ -41,7 +41,8 @@ def list_travellers(
     rides = db.query(Ride).filter(Ride.type == "traveller").order_by(Ride.departure_time).all()
     results = []
     for r in rides:
-        seats = db.query(Seat).filter(Seat.ride_id == r.id).order_by(Seat.seat_number).all()
+        seats = db.query(Seat).filter(Seat.ride_id == r.id).all()
+        seats.sort(key=lambda s: int(s.seat_number))
         results.append(RideDetailSchema(
             id=r.id, type=r.type, operator_name=r.operator_name,
             from_city=r.from_city, to_city=r.to_city,
@@ -91,7 +92,7 @@ def create_traveller(
     # Create seats numbered 1..total_seats
     seats = []
     for num in range(1, request.total_seats + 1):
-        seat_price = ride.price + ((num % 3) * 50)
+        seat_price = ride.price + (100 if num % 3 == 0 else 0)
         seat = Seat(ride_id=ride.id, seat_number=str(num), seat_type="seater", status="available", price=seat_price)
         db.add(seat)
         seats.append(seat)
@@ -132,7 +133,7 @@ def update_traveller(
         seats = db.query(Seat).filter(Seat.ride_id == ride.id).all()
         for seat in seats:
             seat_num = int(seat.seat_number)
-            seat.price = ride.price + ((seat_num % 3) * 50)
+            seat.price = ride.price + (100 if seat_num % 3 == 0 else 0)
     if request.is_active is not None:
         ride.is_active = request.is_active
     if request.image_url is not None:
