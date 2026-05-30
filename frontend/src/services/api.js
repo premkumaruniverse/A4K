@@ -51,6 +51,18 @@ export const travellerAPI = {
   verifyCoupon: (code)          => api.get(`/rides/coupons/${code}`),
 };
 
+// ── Cabs (on-demand) ────────────────────────────────────────────────────────
+export const cabAPI = {
+  search:  (params) => api.get('/cabs', {
+    params: { from: params.from, to: params.to, date: params.date },
+  }),
+  // admin
+  getAll:  ()        => api.get('/cabs/admin/all'),
+  create:  (data)    => api.post('/cabs/admin', data),
+  update:  (id, d)   => api.put(`/cabs/admin/${id}`, d),
+  remove:  (id)      => api.delete(`/cabs/admin/${id}`),
+};
+
 // ── Bookings ────────────────────────────────────────────────────────────────
 export const bookingsAPI = {
   create:        (data) => api.post('/bookings', data),

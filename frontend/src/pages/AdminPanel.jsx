@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Truck, Edit2, Trash2, Ticket, Clock, Tag, Search, MapPin, X, DollarSign, Loader2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Truck, Edit2, Trash2, Ticket, Clock, Tag, Search, MapPin, X, DollarSign, Loader2, Image as ImageIcon, Car } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { adminAPI } from '../services/api';
+import { adminAPI, cabAPI } from '../services/api';
 import useAuthStore from '../stores/authStore';
 import { formatTime, formatDate, formatCurrency } from '../utils/helpers';
 
@@ -30,11 +30,14 @@ export default function AdminPanel() {
   const [tab, setTab] = useState('travellers');
   const [editingRide, setEditingRide] = useState(null);
   const [editingCoupon, setEditingCoupon] = useState(null);
+  const [editingCab, setEditingCab] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
+  const [isAddingCab, setIsAddingCab] = useState(false);
   const [searchRide, setSearchRide] = useState('');
   const [searchBooking, setSearchBooking] = useState('');
   const [searchCoupon, setSearchCoupon] = useState('');
+  const [searchCab, setSearchCab] = useState('');
 
   useEffect(() => {
     if (user && !user.is_admin) {
@@ -97,11 +100,36 @@ export default function AdminPanel() {
     onError: () => toast.error('Failed to delete coupon')
   });
 
+  const { data: cabData, isLoading: cabLoad } = useQuery({
+    queryKey: ['admin-cabs'],
+    queryFn: () => cabAPI.getAll().then(r => r.data),
+    enabled: tab === 'cabs' && !!user?.is_admin
+  });
+
+  const createCabMut = useMutation({
+    mutationFn: cabAPI.create,
+    onSuccess: () => { toast.success('Cab added!'); qc.invalidateQueries(['admin-cabs']); setIsAddingCab(false); },
+    onError: () => toast.error('Failed to add cab')
+  });
+
+  const updateCabMut = useMutation({
+    mutationFn: ({ id, data }) => cabAPI.update(id, data),
+    onSuccess: () => { toast.success('Cab updated!'); qc.invalidateQueries(['admin-cabs']); setEditingCab(null); },
+    onError: () => toast.error('Failed to update cab')
+  });
+
+  const deleteCabMut = useMutation({
+    mutationFn: cabAPI.remove,
+    onSuccess: () => { toast.success('Cab removed!'); qc.invalidateQueries(['admin-cabs']); },
+    onError: () => toast.error('Failed to remove cab')
+  });
+
   if (!user || !user.is_admin) return null;
 
   const travellers = Array.isArray(travData) ? travData : [];
   const bookings = Array.isArray(bookData?.bookings) ? bookData.bookings : [];
   const coupons = Array.isArray(couponData) ? couponData : [];
+  const cabs = Array.isArray(cabData) ? cabData : [];
   
   const activeTravellers = travellers.filter(t => t.is_active !== false);
 
@@ -119,6 +147,135 @@ export default function AdminPanel() {
   const filteredCoupons = coupons.filter(c => 
     c.code.toLowerCase().includes(searchCoupon.toLowerCase())
   );
+
+  const filteredCabs = cabs.filter(c =>
+    c.is_active !== false &&
+    (c.name.toLowerCase().includes(searchCab.toLowerCase()) ||
+    c.type.toLowerCase().includes(searchCab.toLowerCase()))
+  );
+
+  const CabForm = ({ initialData, onSubmit, onCancel, isLoading }) => {
+    const [formData, setFormData] = useState({
+      name: initialData?.name || '',
+      type: initialData?.type || 'Sedan',
+      fare: initialData?.fare || 500,
+      capacity: initialData?.capacity || 4,
+      eta_minutes: initialData?.eta_minutes || 5,
+      amenities: (initialData?.amenities || []).join(', '),
+      image_url: initialData?.image_url || '',
+      driver_name: initialData?.driver?.name || '',
+      driver_phone: initialData?.driver?.phone || 'XXXXXXXXXX',
+      driver_rating: initialData?.driver?.rating || 4.5,
+      driver_trips: initialData?.driver?.trips || 0,
+    });
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      onSubmit({
+        name: formData.name,
+        type: formData.type,
+        fare: Number(formData.fare),
+        capacity: Number(formData.capacity),
+        eta_minutes: Number(formData.eta_minutes),
+        amenities: formData.amenities.split(',').map(a => a.trim()).filter(Boolean),
+        image_url: formData.image_url,
+        driver: {
+          name: formData.driver_name,
+          phone: formData.driver_phone,
+          rating: Number(formData.driver_rating),
+          trips: Number(formData.driver_trips),
+        },
+      });
+    };
+
+    return (
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Vehicle Name</label>
+            <input required className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Swift Dzire" />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Type</label>
+            <select className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+              <option>Sedan</option>
+              <option>SUV</option>
+              <option>Hatchback</option>
+              <option>Auto</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Fare (₹)</label>
+            <input required type="number" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.fare} onChange={e => setFormData({ ...formData, fare: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Capacity</label>
+            <input required type="number" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>ETA (min)</label>
+            <input required type="number" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.eta_minutes} onChange={e => setFormData({ ...formData, eta_minutes: e.target.value })} />
+          </div>
+        </div>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Amenities (comma-separated)</label>
+          <input className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.amenities} onChange={e => setFormData({ ...formData, amenities: e.target.value })} placeholder="AC, Music, WiFi" />
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10 }}>DRIVER DETAILS</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Driver Name</label>
+              <input required className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.driver_name} onChange={e => setFormData({ ...formData, driver_name: e.target.value })} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Phone</label>
+              <input className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.driver_phone} onChange={e => setFormData({ ...formData, driver_phone: e.target.value })} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Rating</label>
+              <input type="number" step="0.1" min="1" max="5" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.driver_rating} onChange={e => setFormData({ ...formData, driver_rating: e.target.value })} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Total Trips</label>
+              <input type="number" className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.driver_trips} onChange={e => setFormData({ ...formData, driver_trips: e.target.value })} />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Vehicle Image</label>
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <input type="file" accept="image/*" className="input-field" style={{ flex: 1, padding: 8 }} onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const tId = toast.loading('Uploading image...');
+              try {
+                const res = await adminAPI.uploadImage(file);
+                setFormData({ ...formData, image_url: res.data.image_url });
+                toast.success('Image uploaded!', { id: tId });
+              } catch {
+                toast.error('Failed to upload', { id: tId });
+              }
+            }} />
+          </div>
+          {formData.image_url && <img src={formData.image_url} style={{ width: 100, height: 60, objectFit: 'cover', borderRadius: 8, marginTop: 10 }} alt="Preview" />}
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+          <button type="button" className="btn btn-outline" onClick={onCancel} style={{ flex: 1 }}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ flex: 1 }}>
+            {isLoading ? <Loader2 size={18} className="spin" /> : 'Save Cab'}
+          </button>
+        </div>
+      </form>
+    );
+  };
 
   const TravellerForm = ({ initialData, onSubmit, onCancel, isLoading }) => {
     const toLocalISO = (dateStr) => {
@@ -283,10 +440,11 @@ export default function AdminPanel() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, background: '#fff', padding: 4, borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
-        <button onClick={() => setTab('travellers')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'travellers' ? 'var(--primary)' : 'transparent', color: tab === 'travellers' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s' }}>Rides</button>
-        <button onClick={() => setTab('bookings')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'bookings' ? 'var(--primary)' : 'transparent', color: tab === 'bookings' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s' }}>Bookings</button>
-        <button onClick={() => setTab('offers')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'offers' ? 'var(--primary)' : 'transparent', color: tab === 'offers' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s' }}>Offers</button>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: '#fff', padding: 4, borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
+        <button onClick={() => setTab('travellers')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'travellers' ? 'var(--primary)' : 'transparent', color: tab === 'travellers' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s', fontSize: 13 }}>Rides</button>
+        <button onClick={() => setTab('cabs')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'cabs' ? 'var(--primary)' : 'transparent', color: tab === 'cabs' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s', fontSize: 13 }}>Cabs</button>
+        <button onClick={() => setTab('bookings')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'bookings' ? 'var(--primary)' : 'transparent', color: tab === 'bookings' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s', fontSize: 13 }}>Bookings</button>
+        <button onClick={() => setTab('offers')} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: tab === 'offers' ? 'var(--primary)' : 'transparent', color: tab === 'offers' ? '#fff' : 'var(--text-muted)', fontWeight: 700, transition: '0.2s', fontSize: 13 }}>Offers</button>
       </div>
 
       {tab === 'travellers' && (
@@ -339,6 +497,61 @@ export default function AdminPanel() {
                       <Edit2 size={14} style={{ marginRight: 4 }} /> Edit
                     </button>
                     <button className="btn" style={{ width: 'auto', height: 32, padding: '0 12px', fontSize: 12, background: 'var(--danger-bg)', color: 'var(--danger)', border: 'none' }} onClick={() => { if(window.confirm('Delete this ride?')) deleteMut.mutate(t.id); }}>
+                      <Trash2 size={14} style={{ marginRight: 4 }} /> Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'cabs' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800 }}>Manage Cabs</h3>
+            <button className="btn btn-primary" style={{ width: 'auto', height: 36, padding: '0 16px', fontSize: 13 }} onClick={() => setIsAddingCab(true)}>
+              <Plus size={16} style={{ marginRight: 6 }} /> Add Cab
+            </button>
+          </div>
+
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            <Search size={18} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 11 }} />
+            <input type="text" className="input-field" placeholder="Search by name or type..." style={{ width: '100%', paddingLeft: 40 }} value={searchCab} onChange={e => setSearchCab(e.target.value)} />
+          </div>
+
+          {cabLoad ? <div className="skeleton" style={{ height: 100 }} /> : filteredCabs.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No cabs found.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {filteredCabs.map(c => (
+                <div key={c.id} className="card" style={{ padding: 16, border: 'none', boxShadow: 'var(--shadow-sm)', opacity: c.is_active === false ? 0.5 : 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      {c.image_url ? (
+                        <img src={c.image_url} style={{ width: 56, height: 40, objectFit: 'cover', borderRadius: 8 }} alt={c.name} />
+                      ) : (
+                        <div style={{ width: 56, height: 40, borderRadius: 8, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Car size={20} color="var(--primary)" />
+                        </div>
+                      )}
+                      <div>
+                        <h4 style={{ fontSize: 15, fontWeight: 800 }}>{c.name}</h4>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{c.type} • {c.capacity} seats</p>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: 16, fontWeight: 900, color: 'var(--primary)' }}>₹{c.fare}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>ETA {c.eta_minutes} min</p>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>Driver: {c.driver?.name} • ⭐ {c.driver?.rating}</p>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                    <button className="btn btn-outline" style={{ width: 'auto', height: 32, padding: '0 12px', fontSize: 12 }} onClick={() => setEditingCab(c)}>
+                      <Edit2 size={14} style={{ marginRight: 4 }} /> Edit
+                    </button>
+                    <button className="btn" style={{ width: 'auto', height: 32, padding: '0 12px', fontSize: 12, background: 'var(--danger-bg)', color: 'var(--danger)', border: 'none' }} onClick={() => { if (window.confirm('Remove this cab?')) deleteCabMut.mutate(c.id); }}>
                       <Trash2 size={14} style={{ marginRight: 4 }} /> Remove
                     </button>
                   </div>
@@ -475,6 +688,18 @@ export default function AdminPanel() {
       {editingRide && (
         <Modal title="Edit Ride" onClose={() => setEditingRide(null)}>
           <TravellerForm initialData={editingRide} onSubmit={d => updateMut.mutate({id: editingRide.id, data: d})} onCancel={() => setEditingRide(null)} isLoading={updateMut.isPending} />
+        </Modal>
+      )}
+
+      {isAddingCab && (
+        <Modal title="Add New Cab" onClose={() => setIsAddingCab(false)}>
+          <CabForm onSubmit={d => createCabMut.mutate(d)} onCancel={() => setIsAddingCab(false)} isLoading={createCabMut.isPending} />
+        </Modal>
+      )}
+
+      {editingCab && (
+        <Modal title="Edit Cab" onClose={() => setEditingCab(null)}>
+          <CabForm initialData={editingCab} onSubmit={d => updateCabMut.mutate({ id: editingCab.id, data: d })} onCancel={() => setEditingCab(null)} isLoading={updateCabMut.isPending} />
         </Modal>
       )}
     </div>

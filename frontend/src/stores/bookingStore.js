@@ -19,6 +19,9 @@ const useBookingStore = create(
       // Step 2: Traveller selection
       selectedTraveller: null,  // full ride object
 
+      // Step 2b: Cab selection (alternative to traveller)
+      selectedCab: null,        // cab object from /api/v1/cabs
+
       // Step 3: Seat selection (single seat)
       selectedSeat: null,       // { id, seat_number }
 
@@ -28,12 +31,14 @@ const useBookingStore = create(
       // ── Actions ──────────────────────────────────────────────────────
       setRoute: (routeKey) => set({ selectedRoute: ROUTES[routeKey] || null }),
       setDate: (date) => set({ travelDate: date }),
-      setTraveller: (ride) => set({ selectedTraveller: ride, selectedSeat: null }),
+      setTraveller: (ride) => set({ selectedTraveller: ride, selectedSeat: null, selectedCab: null }),
+      setCab: (cab) => set({ selectedCab: cab, selectedTraveller: null, selectedSeat: null }),
       setSeat: (seat) => set({ selectedSeat: seat }),
       setCurrentBooking: (booking) => set({ currentBooking: booking }),
 
       reset: () => set({
         selectedTraveller: null,
+        selectedCab: null,
         selectedSeat: null,
         currentBooking: null,
       }),
@@ -42,6 +47,7 @@ const useBookingStore = create(
         selectedRoute: null,
         travelDate: '',
         selectedTraveller: null,
+        selectedCab: null,
         selectedSeat: null,
         currentBooking: null,
       }),
