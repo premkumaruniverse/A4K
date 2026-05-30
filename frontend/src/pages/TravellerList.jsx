@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Clock, Truck, AlertCircle, ArrowRight, Star, Users, Car } from 'lucide-react';
 import { travellerAPI, cabAPI } from '../services/api';
 import useBookingStore from '../stores/bookingStore';
 import { formatTime, formatDuration, formatCurrency } from '../utils/helpers';
+import RideTypeToggle from '../components/RideTypeToggle';
 
 function StepBar({ step }) {
   const steps = ['Route', 'Auth', 'Seat', 'Pay', 'Done'];
@@ -105,8 +106,16 @@ function CabCard({ cab, onSelect }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function TravellerList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { selectedRoute, travelDate, setTraveller, setCab } = useBookingStore();
   const [mode, setMode] = useState('shuttle'); // 'shuttle' | 'cab'
+
+  // Refetch cabs when component mounts (user returns from booking)
+  useEffect(() => {
+    if (selectedRoute) {
+      queryClient.invalidateQueries({ queryKey: ['cabs'] });
+    }
+  }, [selectedRoute, queryClient]);
 
   const { data: shuttleData, isLoading: shuttleLoading, isError: shuttleError, refetch: refetchShuttle } = useQuery({
     queryKey: ['travellers', selectedRoute?.from, selectedRoute?.to, travelDate],
@@ -164,23 +173,8 @@ export default function TravellerList() {
             </p>
           </div>
 
-          {/* Capsule Toggle */}
-          <div className="mode-capsule">
-            <button
-              className={`mode-capsule-btn ${mode === 'shuttle' ? 'active' : ''}`}
-              onClick={() => setMode('shuttle')}
-            >
-              <Truck size={13} />
-              Shuttle
-            </button>
-            <button
-              className={`mode-capsule-btn ${mode === 'cab' ? 'active' : ''}`}
-              onClick={() => setMode('cab')}
-            >
-              <Car size={13} />
-              Cab
-            </button>
-          </div>
+          {/* Ride Type Toggle */}
+          <RideTypeToggle mode={mode} onModeChange={setMode} />
         </div>
         <StepBar step={1} />
       </div>
