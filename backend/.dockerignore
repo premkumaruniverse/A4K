@@ -1,0 +1,21 @@
+# Backend .dockerignore
+__pycache__/
+*.py[cod]
+*.so
+*.pyc
+venv/
+env/
+.venv/
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite3
+*.log
+server.log
+.DS_Store
+.git/
+.gitignore
+.vscode/
+.idea/
+test_payload.json
