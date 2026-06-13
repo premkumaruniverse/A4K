@@ -1,64 +1,26 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   workflow_run:
-    workflows: ["Build & Push Frontend", "Build & Push Backend"]
+    workflows: ["Build & Push Backend", "Build & Push Frontend"]
     types: [completed]
-    branches: []
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Image tag to deploy (e.g. v1.0.1)"
-        required: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Resolve image tag
-        id: tag
-        run: |
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            set -e
             cd /opt/a4k
+            echo "IMAGE_TAG=${{ github.event.workflow_run.head_branch }}" \
+              | grep -q "^v" && \
+              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ github.event.workflow_run.head_branch }}/" .env
 
-            # Update image tag in .env
-            sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ steps.tag.outputs.tag }}/" production.env
-
-            # Log in to GHCR
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            # Pull new images
-            docker compose -f docker-compose.production.yml --env-file production.env pull backend frontend
-
-            # Zero-downtime restart
-            docker compose -f docker-compose.production.yml --env-file production.env up -d --no-deps --remove-orphans backend frontend
-
-            # Health checks
-            sleep 15
-            docker compose -f docker-compose.production.yml ps --format json | \
-              python3 -c "
-            import sys, json
-            services = [json.loads(l) for l in sys.stdin]
-            unhealthy = [s['Name'] for s in services if s.get('Health','healthy') == 'unhealthy']
-            if unhealthy:
-                print('UNHEALTHY:', unhealthy); sys.exit(1)
-            print('All services healthy')
-            "
-
-            # Cleanup old images (keep last 3 tags)
-            docker image prune -f --filter "until=72h"
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f

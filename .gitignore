@@ -1,8 +1,6 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
 *.pyc
 
 # Virtual environments
@@ -10,7 +8,7 @@ venv/
 env/
 .venv/
 
-# Environment variables
+# Environment variables — NEVER commit real .env
 .env
 .env.*
 !.env.example
@@ -22,16 +20,11 @@ env/
 # Node
 node_modules/
 dist/
-build/
 .npm/
-*.local
 
 # Logs
 *.log
 logs/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # OS
 .DS_Store
@@ -40,9 +33,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-*.suo
-*.sw?
 
 # Backend misc
 backend/server.log
-backend/__pycache__/
+backend/test_payload.json
+backend/create_db.py
