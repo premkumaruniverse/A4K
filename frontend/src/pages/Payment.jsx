@@ -66,37 +66,17 @@ export default function Payment() {
     try {
       const finalName = isNewUser ? (passengerName || 'Traveller') : (user?.name || user?.phone || 'Traveller');
 
+      let booking;
       if (isCabMode) {
-        // Cab booking: mock confirmation (no seat lock / ride_id in DB)
-        await new Promise(r => setTimeout(r, 1200));
-        const mockBooking = {
-          id: 'cab-' + Date.now(),
-          booking_ref: 'CB' + Math.random().toString(36).slice(2, 8).toUpperCase(),
-          status: 'confirmed',
-          payment_status: 'paid',
-          total_price: total,
-          base_fare: baseFare,
-          taxes,
-          ride: {
-            type: 'cab',
-            operator_name: selectedCab.name,
-            from_city: selectedCab.from_city,
-            to_city: selectedCab.to_city,
-            departure_time: new Date().toISOString(),
-            arrival_time: new Date(Date.now() + 90 * 60000).toISOString(),
-            price: baseFare,
-          },
-          seat_numbers: ['—'],
-          passengers: [{ name: finalName }],
-          cab: selectedCab,
-        };
-        setCurrentBooking(mockBooking);
-        reset();
-        navigate('/confirmation');
-        return;
+        booking = await initPayment(null, finalName, {
+          cab_id: selectedCab.id,
+          from_city: selectedCab.from_city,
+          to_city: selectedCab.to_city,
+        });
+      } else {
+        booking = await initPayment(ride.id, finalName);
       }
 
-      const booking = await initPayment(ride.id, finalName);
       if (!booking) { setLoading(false); return; }
 
       const confirmed = await verifyPayment();
@@ -175,19 +155,20 @@ export default function Payment() {
           {(isCabMode ? [
             { label: 'Vehicle',    value: selectedCab.name },
             { label: 'Type',       value: selectedCab.type },
+            { label: 'Cab Number', value: selectedCab.cab_number || 'Pending Assignment', bold: true, color: selectedCab.cab_number ? 'var(--primary)' : 'var(--danger)' },
             { label: 'Route',      value: `${selectedCab.from_city} → ${selectedCab.to_city}` },
             { label: 'Driver',     value: selectedCab.driver.name },
-            { label: 'ETA',        value: `${selectedCab.eta_minutes} min`, bold: true },
+            { label: 'ETA',        value: `${selectedCab.eta_minutes} min` },
           ] : [
             { label: 'Route',      value: `${ride.from_city} → ${ride.to_city}` },
             { label: 'Departure',  value: formatTime(ride.departure_time) },
             { label: 'Arrival',    value: formatTime(ride.arrival_time) },
             { label: 'Seat',       value: `Seat #${seat.seat_number}`, bold: true },
             { label: 'Operator',   value: ride.operator_name },
-          ]).map(({ label, value, bold }) => (
+          ]).map(({ label, value, bold, color }) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--bg)' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
-              <span style={{ fontSize: 13, fontWeight: bold ? 800 : 700, color: bold ? 'var(--primary)' : 'var(--text-primary)' }}>{value}</span>
+              <span style={{ fontSize: 13, fontWeight: bold ? 800 : 700, color: color || (bold ? 'var(--primary)' : 'var(--text-primary)') }}>{value}</span>
             </div>
           ))}
 

@@ -44,11 +44,21 @@ export default function Confirmation() {
           </div>
 
           {/* Seat highlight */}
-          {currentBooking.seat_numbers?.length > 0 && (
+          {currentBooking.seat_numbers?.length > 0 && !currentBooking.seat_numbers.includes('—') && (
             <div style={{ background: 'var(--primary-light)', borderRadius: 14, padding: '14px 20px', marginBottom: 20 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Seat</p>
               <p style={{ fontSize: 40, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit,var(--font-sans)', lineHeight: 1 }}>
                 {currentBooking.seat_numbers.join(', ')}
+              </p>
+            </div>
+          )}
+
+          {/* Cab Number highlight if cab booking */}
+          {ride?.type === 'cab' && (
+            <div style={{ background: 'var(--primary-light)', borderRadius: 14, padding: '14px 20px', marginBottom: 20 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cab Number</p>
+              <p style={{ fontSize: 30, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit,var(--font-sans)', lineHeight: 1 }}>
+                {currentBooking.cab_number || 'Pending Assignment'}
               </p>
             </div>
           )}
@@ -74,6 +84,7 @@ export default function Confirmation() {
           {[
             { label: 'Route',    value: ride ? `${ride.from_city} → ${ride.to_city}` : '' },
             { label: 'Operator', value: ride?.operator_name },
+            ...(ride?.type === 'cab' ? [{ label: 'Cab Number', value: currentBooking.cab_number || 'Pending Assignment', color: currentBooking.cab_number ? 'var(--primary)' : 'var(--danger)' }] : []),
             { label: 'Paid',     value: formatCurrency(currentBooking.total_price), color: 'var(--success)' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--bg)' }}>

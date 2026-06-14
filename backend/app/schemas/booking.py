@@ -31,7 +31,10 @@ class PassengerInput(BaseModel):
 
 
 class CreateBookingRequest(BaseModel):
-    ride_id: str
+    ride_id: Optional[str] = None
+    cab_id: Optional[str] = None
+    from_city: Optional[str] = None
+    to_city: Optional[str] = None
     seat_ids: List[str] = []
     passengers: List[PassengerInput] = []
     payment_method: str = "upi"
@@ -88,6 +91,7 @@ class BookingResponse(BaseModel):
     payment_status: str
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
+    cab_number: Optional[str] = None
     booked_at: datetime
     cancelled_at: Optional[datetime] = None
     passengers: List[PassengerResponse] = []

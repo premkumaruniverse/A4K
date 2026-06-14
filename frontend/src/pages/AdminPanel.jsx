@@ -158,6 +158,7 @@ export default function AdminPanel() {
     const [formData, setFormData] = useState({
       name: initialData?.name || '',
       type: initialData?.type || 'Sedan',
+      cab_number: initialData?.cab_number || '',
       fare: initialData?.fare || 500,
       capacity: initialData?.capacity || 4,
       eta_minutes: initialData?.eta_minutes || 5,
@@ -174,6 +175,7 @@ export default function AdminPanel() {
       onSubmit({
         name: formData.name,
         type: formData.type,
+        cab_number: formData.cab_number,
         fare: Number(formData.fare),
         capacity: Number(formData.capacity),
         eta_minutes: Number(formData.eta_minutes),
@@ -190,7 +192,7 @@ export default function AdminPanel() {
 
     return (
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Vehicle Name</label>
             <input required className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Swift Dzire" />
@@ -203,6 +205,10 @@ export default function AdminPanel() {
               <option>Hatchback</option>
               <option>Auto</option>
             </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Cab Number</label>
+            <input className="input-field" style={{ width: '100%', marginTop: 4 }} value={formData.cab_number} onChange={e => setFormData({ ...formData, cab_number: e.target.value })} placeholder="e.g. WB-02-B-1234" />
           </div>
         </div>
 
@@ -537,7 +543,18 @@ export default function AdminPanel() {
                         </div>
                       )}
                       <div>
-                        <h4 style={{ fontSize: 15, fontWeight: 800 }}>{c.name}</h4>
+                        <h4 style={{ fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          {c.name}
+                          {c.cab_number ? (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-light)', padding: '2px 6px', borderRadius: 4 }}>
+                              {c.cab_number}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)', background: 'var(--danger-light)', padding: '2px 6px', borderRadius: 4 }}>
+                              Not Assigned
+                            </span>
+                          )}
+                        </h4>
                         <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{c.type} • {c.capacity} seats</p>
                       </div>
                     </div>

@@ -23,6 +23,7 @@ class Booking(Base):
     payment_status = Column(String(20), default="pending")   # pending/paid/failed/refunded
     payment_method = Column(String(30), nullable=True)
     transaction_id = Column(String(100), nullable=True)
+    cab_number = Column(String(50), nullable=True)
     booked_at = Column(DateTime, default=datetime.utcnow)
     cancelled_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

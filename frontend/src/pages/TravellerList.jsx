@@ -47,7 +47,19 @@ function CabCard({ cab, onSelect }) {
         {/* Name + fare */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{cab.name}</p>
+            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {cab.name}
+              <span style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: cab.cab_number ? 'var(--primary)' : 'var(--danger)',
+                background: cab.cab_number ? 'var(--primary-light)' : 'var(--danger-light)',
+                padding: '2px 6px',
+                borderRadius: 4
+              }}>
+                {cab.cab_number || 'Pending Assignment'}
+              </span>
+            </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
               <Star size={12} fill="#F59E0B" color="#F59E0B" />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{cab.rating}</span>

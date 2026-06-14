@@ -43,8 +43,11 @@ export default function BookingDetail() {
         <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.2)' }}>
           <p style={{ fontSize: 11, opacity: 0.7, fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em' }}>BOOKING REF</p>
           <p style={{ fontSize: 24, fontWeight: 900, fontFamily: 'monospace', letterSpacing: 4 }}>{booking.booking_ref}</p>
-          {booking.seat_numbers?.length > 0 && (
+          {booking.seat_numbers?.length > 0 && !booking.seat_numbers.includes('—') && (
             <p style={{ fontSize: 13, opacity: 0.85, fontWeight: 700, marginTop: 6 }}>Seat {booking.seat_numbers.join(', ')}</p>
+          )}
+          {ride?.type === 'cab' && (
+            <p style={{ fontSize: 13, opacity: 0.85, fontWeight: 700, marginTop: 6 }}>Cab Number: {booking.cab_number || 'Pending Assignment'}</p>
           )}
         </div>
       </div>
@@ -79,6 +82,7 @@ export default function BookingDetail() {
               { label: 'Departure',  value: formatTime(ride.departure_time) },
               { label: 'Arrival',    value: formatTime(ride.arrival_time) },
               { label: 'Operator',   value: ride.operator_name },
+              ...(ride.type === 'cab' ? [{ label: 'Cab Number', value: booking.cab_number || 'Pending Assignment' }] : []),
             ].map(({ label, value }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid var(--bg)' }}>
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>

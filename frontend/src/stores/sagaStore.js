@@ -61,19 +61,31 @@ const useSagaStore = create((set, get) => ({
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 
   // ── Step 2: Create booking + init payment ─────────────────────────
-  initPayment: async (rideId, userName) => {
+  initPayment: async (rideId, userName, cabParams = null) => {
     const { lockedSeat, paymentMethod } = get();
-    if (!lockedSeat) return false;
+    if (!cabParams && !lockedSeat) return false;
 
     set({ sagaState: 'PAYMENT_INIT', error: null });
     try {
-      // Create booking
-      const bookingRes = await bookingsAPI.create({
-        ride_id: rideId,
-        seat_ids: [lockedSeat.seat_id],
-        passengers: [{ name: userName || 'Traveller', age: 25, gender: 'other' }],
-        payment_method: paymentMethod,
-      });
+      let bookingRes;
+      if (cabParams) {
+        // Create cab booking
+        bookingRes = await bookingsAPI.create({
+          cab_id: cabParams.cab_id,
+          from_city: cabParams.from_city,
+          to_city: cabParams.to_city,
+          passengers: [{ name: userName || 'Traveller', age: 25, gender: 'other' }],
+          payment_method: paymentMethod,
+        });
+      } else {
+        // Create standard booking
+        bookingRes = await bookingsAPI.create({
+          ride_id: rideId,
+          seat_ids: [lockedSeat.seat_id],
+          passengers: [{ name: userName || 'Traveller', age: 25, gender: 'other' }],
+          payment_method: paymentMethod,
+        });
+      }
       const booking = bookingRes.data;
       set({ bookingId: booking.id });
 

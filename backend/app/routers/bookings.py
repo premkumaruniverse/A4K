@@ -48,6 +48,7 @@ def _build_response(booking: Booking, ride) -> BookingResponse:
         status=booking.status, payment_status=booking.payment_status,
         payment_method=booking.payment_method,
         transaction_id=booking.transaction_id,
+        cab_number=booking.cab_number,
         booked_at=booking.booked_at, cancelled_at=booking.cancelled_at,
         passengers=passengers,
     )
@@ -134,6 +135,66 @@ def create_booking(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if request.cab_id:
+        from app.models.cab import Cab
+        cab = db.query(Cab).filter(Cab.id == request.cab_id, Cab.is_active == True).first()
+        if not cab:
+            raise HTTPException(status_code=404, detail="Cab not found")
+        
+        # Create a dynamic Ride entry of type "cab"
+        ride = Ride(
+            type="cab",
+            operator_name=cab.name,
+            from_city=request.from_city or "Kharagpur",
+            to_city=request.to_city or "Kolkata Airport",
+            departure_time=datetime.utcnow(),
+            arrival_time=datetime.utcnow() + timedelta(minutes=90),
+            price=cab.fare,
+            rating=cab.rating,
+            total_reviews=cab.total_reviews,
+            total_seats=cab.capacity,
+            available_seats=0,
+            image_url=cab.image_url,
+            is_active=True,
+        )
+        db.add(ride)
+        db.flush()
+
+        passenger_count = max(len(request.passengers), 1)
+        base_fare = round(cab.fare * passenger_count, 2)
+        taxes = round(base_fare * 0.05, 2)
+        total_price = round(base_fare + taxes, 2)
+
+        booking = Booking(
+            booking_ref=_gen_ref(),
+            user_id=current_user.id,
+            ride_id=ride.id,
+            total_price=total_price,
+            base_fare=base_fare,
+            taxes=taxes,
+            passenger_count=passenger_count,
+            status="pending",
+            payment_status="pending",
+            payment_method=request.payment_method,
+            cab_number=cab.cab_number or "Not Assigned",
+        )
+        booking.seat_ids = []
+        booking.seat_numbers = ["—"]
+
+        db.add(booking)
+        db.flush()
+
+        for p in request.passengers:
+            db.add(Passenger(booking_id=booking.id, name=p.name, age=p.age, gender=p.gender))
+
+        db.commit()
+        db.refresh(booking)
+        return _build_response(booking, ride)
+
+    # Standard fixed-route ride booking flow
+    if not request.ride_id:
+        raise HTTPException(status_code=400, detail="Either ride_id or cab_id is required.")
+
     ride = db.query(Ride).filter(Ride.id == request.ride_id, Ride.is_active == True).first()
     if not ride:
         raise HTTPException(status_code=404, detail="Ride not found")
