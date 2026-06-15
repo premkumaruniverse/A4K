@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Clock, Truck, AlertCircle, ArrowRight, Star, Users, Car } from 'lucide-react';
+import { ArrowLeft, Clock, Truck, AlertCircle, ArrowRight, Star, Users, Car, MapPin, Pencil, SlidersHorizontal } from 'lucide-react';
 import { travellerAPI, cabAPI } from '../services/api';
 import useBookingStore from '../stores/bookingStore';
 import { formatTime, formatDuration, formatCurrency } from '../utils/helpers';
@@ -29,75 +29,53 @@ function StepBar({ step }) {
 
 export { StepBar };
 
-// ── Cab Card ──────────────────────────────────────────────────────────────────
+// ── Cab Card (Horizontal Layout) ─────────────────────────────────────────────
 function CabCard({ cab, onSelect }) {
   return (
-    <div className="cab-card" onClick={() => onSelect(cab)}>
-      <div className="cab-card-image-wrap">
+    <div className="cab-card-h" onClick={() => onSelect(cab)}>
+      {/* Left: Image */}
+      <div className="cab-card-h-img-wrap">
         <img
           src={cab.image_url}
           alt={cab.name}
-          className="cab-card-image"
+          className="cab-card-h-img"
           onError={(e) => { e.target.style.display = 'none'; }}
         />
-        <span className={`cab-type-badge ${cab.type === 'SUV' ? 'suv' : 'sedan'}`}>{cab.type}</span>
       </div>
 
-      <div className="cab-card-body">
-        {/* Name + fare */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+      {/* Right: Details */}
+      <div className="cab-card-h-body">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{cab.name}</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
-              <Star size={12} fill="#F59E0B" color="#F59E0B" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{cab.rating}</span>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({cab.total_reviews})</span>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit, var(--font-sans)' }}>
-              {formatCurrency(cab.fare)}
+            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2 }}>{cab.name}</p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+              {cab.type} &bull; {cab.capacity} Seats
             </p>
-            <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>Total Fare</p>
+          </div>
+          <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit, var(--font-sans)' }}>
+            {formatCurrency(cab.fare)}
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Star size={13} fill="#F59E0B" color="#F59E0B" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{cab.rating}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Clock size={13} color="var(--success)" />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--success)' }}>{cab.eta_minutes} min away</span>
           </div>
         </div>
 
-        {/* Driver + ETA + Capacity */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <div className="cab-info-chip">
-            <Clock size={12} color="var(--primary)" />
-            <span>{cab.eta_minutes} min away</span>
-          </div>
-          <div className="cab-info-chip">
-            <Users size={12} color="var(--primary)" />
-            <span>{cab.capacity} seats</span>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+          <button
+            className="btn-select-cab"
+            onClick={(e) => { e.stopPropagation(); onSelect(cab); }}
+          >
+            Select Cab
+          </button>
         </div>
-
-        {/* Driver row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: 'var(--primary)' }}>
-              {cab.driver.name[0]}
-            </div>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{cab.driver.name}</p>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{cab.driver.trips.toLocaleString()} trips</p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--primary)', fontWeight: 700, fontSize: 13 }}>
-            Book Now <ArrowRight size={14} />
-          </div>
-        </div>
-
-        {/* Amenities */}
-        {cab.amenities?.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {cab.amenities.map(a => (
-              <span key={a} style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)' }}>{a}</span>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -108,9 +86,8 @@ export default function TravellerList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { selectedRoute, travelDate, setTraveller, setCab } = useBookingStore();
-  const [mode, setMode] = useState('shuttle'); // 'shuttle' | 'cab'
+  const [mode, setMode] = useState('shuttle');
 
-  // Refetch cabs when component mounts (user returns from booking)
   useEffect(() => {
     if (selectedRoute) {
       queryClient.invalidateQueries({ queryKey: ['cabs'] });
@@ -158,6 +135,10 @@ export default function TravellerList() {
   const isError   = mode === 'shuttle' ? shuttleError   : cabError;
   const refetch   = mode === 'shuttle' ? refetchShuttle : refetchCab;
 
+  const formattedDate = travelDate
+    ? new Date(travelDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+    : 'All dates';
+
   return (
     <div className="page" style={{ paddingBottom: 20, background: 'var(--bg)' }}>
       {/* Sticky Header */}
@@ -167,21 +148,70 @@ export default function TravellerList() {
             <ArrowLeft size={20} color="var(--text-primary)" />
           </button>
           <div style={{ flex: 1 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800 }}>{selectedRoute.from} → {selectedRoute.to}</h2>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
-              {travelDate ? new Date(travelDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : 'All dates'}
-            </p>
+            <h2 style={{ fontSize: 16, fontWeight: 800 }}>Select {mode === 'shuttle' ? 'Shuttle' : 'Cab'}</h2>
           </div>
-
-          {/* Ride Type Toggle */}
-          <RideTypeToggle mode={mode} onModeChange={setMode} />
         </div>
         <StepBar step={1} />
       </div>
 
       <div style={{ padding: '16px 16px 32px' }}>
+        {/* Route Info Card */}
+        <div style={{
+          background: '#fff',
+          borderRadius: 16,
+          padding: '16px 18px',
+          marginBottom: 16,
+          border: '1.5px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MapPin size={18} color="var(--primary)" />
+            </div>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>
+                {selectedRoute.from} → {selectedRoute.to}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{formattedDate}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/home')}
+            style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--bg)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Pencil size={16} color="var(--text-muted)" />
+          </button>
+        </div>
+
+        {/* Shuttle/Cab Toggle */}
+        <div style={{ marginBottom: 16 }}>
+          <RideTypeToggle mode={mode} onModeChange={setMode} />
+        </div>
+
+        {/* Count + Filters Row */}
+        {!isLoading && !isError && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingLeft: 4, paddingRight: 4 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+              {mode === 'shuttle' ? travellers.length : cabs.length} {mode === 'shuttle' ? 'shuttles' : 'cabs'} available
+            </p>
+            <button style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px', borderRadius: 99,
+              border: '1.5px solid var(--border)', background: '#fff',
+              fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}>
+              <SlidersHorizontal size={14} />
+              Filters
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
         {isLoading ? (
-          [1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: mode === 'cab' ? 220 : 120, marginBottom: 12 }} />)
+          [1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: mode === 'cab' ? 140 : 120, marginBottom: 12, borderRadius: 16 }} />)
         ) : isError ? (
           <div className="empty-state">
             <div className="empty-icon"><AlertCircle size={36} color="var(--danger)" /></div>
@@ -198,9 +228,6 @@ export default function TravellerList() {
             </div>
           ) : (
             <>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, paddingLeft: 4 }}>
-                {travellers.length} shuttles available
-              </p>
               {travellers.map(t => {
                 const isFull = t.available_seats === 0;
                 const seatsColor = getSeatsColor(t.available_seats, t.total_seats);
@@ -284,9 +311,6 @@ export default function TravellerList() {
             </div>
           ) : (
             <>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, paddingLeft: 4 }}>
-                {cabs.length} cabs available
-              </p>
               {cabs.map(cab => <CabCard key={cab.id} cab={cab} onSelect={handleSelectCab} />)}
             </>
           )

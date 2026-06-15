@@ -60,8 +60,8 @@ export default function Home() {
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>Select Route</span>
           </div>
 
-          {/* Route Toggle replaced with vertical stacked selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+          {/* Route Selection - Two Column */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             {Object.values(ROUTES).map((r) => {
               const isSelected = route === r.key;
               const isKgpToCcu = r.key === 'KGP_CCU';
@@ -72,80 +72,25 @@ export default function Home() {
                   onClick={() => setLocalRoute(r.key)}
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    padding: '16px 14px',
-                    borderRadius: 18,
-                    border: isSelected ? '2px solid var(--primary)' : '2px solid var(--border)',
-                    background: isSelected ? 'var(--primary-light)' : '#fff',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                    padding: '16px 18px',
+                    borderRadius: 14,
+                    border: isSelected ? '2px solid var(--primary)' : '1.5px solid var(--border)',
+                    background: isSelected ? '#F0F5FF' : '#fff',
                     cursor: 'pointer',
-                    width: '100%',
                     transition: 'all 0.2s ease',
                     outline: 'none',
-                    boxShadow: isSelected ? '0 4px 12px rgba(37,99,235,0.08)' : 'none',
+                    boxShadow: isSelected ? '0 4px 16px rgba(37,99,235,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
                   }}
                 >
-                  {/* Radio Indicator */}
-                  <div style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    border: isSelected ? '2.5px solid #10B981' : '2px solid var(--border)',
-                    background: isSelected ? '#34D399' : 'transparent',
-                    marginRight: 14,
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {isSelected && (
-                      <div style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: '#fff'
-                      }} />
-                    )}
-                  </div>
-
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    {/* Top Row: Cities and Arrow */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      {/* Origin City */}
-                      <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>
-                        {isKgpToCcu ? 'Kharagpur' : 'Kolkata'}
-                      </span>
-
-                      {/* Arrow Line */}
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 30, padding: '0 10px' }}>
-                        <div style={{ height: 2, background: isSelected ? 'var(--primary)' : 'var(--border)', flex: 1 }} />
-                        <div style={{ 
-                          width: 0, height: 0, 
-                          borderTop: '4px solid transparent', 
-                          borderBottom: '4px solid transparent', 
-                          borderLeft: `6px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`, 
-                          marginLeft: -2 
-                        }} />
-                      </div>
-
-                      {/* Destination City */}
-                      <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', textAlign: 'right' }}>
-                        {isKgpToCcu ? 'Kolkata' : 'Kharagpur'}
-                      </span>
-                    </div>
-
-                    {/* Bottom Row: Stops Metadata */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      {/* Origin Stops */}
-                      <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500, opacity: 0.85 }}>
-                        {isKgpToCcu ? '@IIT @Station @Chowrangee' : '@Airport @Metro @Station'}
-                      </span>
-
-                      {/* Destination Stops */}
-                      <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500, opacity: 0.85, textAlign: 'right' }}>
-                        {isKgpToCcu ? '@Airport @Metro @Station' : '@IIT @Station @Chowrangee'}
-                      </span>
-                    </div>
-                  </div>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: isSelected ? 'var(--primary)' : 'var(--text-primary)' }}>
+                    {isKgpToCcu ? 'Kharagpur' : 'Kolkata'}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: isSelected ? 'var(--primary)' : 'var(--text-secondary)', marginTop: 2 }}>
+                    → {isKgpToCcu ? 'Kolkata' : 'Kharagpur'}
+                  </span>
                 </button>
               );
             })}
@@ -172,95 +117,22 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Boarding Points Section */}
+      {/* Route Map Section */}
       <div style={{ padding: '24px 20px 0' }} className="fade-up">
         <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Outfit, var(--font-sans)' }}>
           <MapPin size={18} color="var(--primary)" style={{ flexShrink: 0 }} />
-          Boarding & Drop-off Points
+          Route Map
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {/* Kharagpur Column */}
-          <div style={{
-            background: '#fff',
+        <img
+          src={route === 'KGP_CCU' ? '/route-kgp-ccu.png' : '/route-ccu-kgp.png'}
+          alt={route === 'KGP_CCU' ? 'Kharagpur to Kolkata route' : 'Kolkata to Kharagpur route'}
+          style={{
+            width: '100%',
+            borderRadius: 16,
             border: '1.5px solid var(--border)',
-            borderRadius: 20,
-            padding: '16px 14px',
             boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12
-          }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: 8, marginBottom: 4 }}>
-              Kharagpur
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                'IIT Gate',
-                'Station',
-                'Chowrangee'
-              ].map((stop, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{
-                    color: 'var(--primary)',
-                    fontWeight: 900,
-                    fontSize: 14,
-                    fontFamily: 'Outfit, var(--font-sans)',
-                    background: 'var(--primary-light)',
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>@</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{stop}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Kolkata Column */}
-          <div style={{
-            background: '#fff',
-            border: '1.5px solid var(--border)',
-            borderRadius: 20,
-            padding: '16px 14px',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12
-          }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: 8, marginBottom: 4 }}>
-              Kolkata
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                'Airport',
-                'Metro',
-                'Station'
-              ].map((stop, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{
-                    color: 'var(--primary)',
-                    fontWeight: 900,
-                    fontSize: 14,
-                    fontFamily: 'Outfit, var(--font-sans)',
-                    background: 'var(--primary-light)',
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>@</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{stop}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          }}
+        />
       </div>
 
       <BottomNav />
