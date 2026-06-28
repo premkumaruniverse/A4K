@@ -27,7 +27,7 @@ export default function Splash() {
         <h1 style={{ color: '#fff', fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 8, fontFamily: 'Outfit, var(--font-sans)' }}>
           KGP Shuttle
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: 500 }}>Kharagpur ↔ Kolkata Airport</p>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: 500 }}>Kharagpur ↔ Kolkata</p>
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 48 }}>
         {[0,1,2].map(i => (

@@ -74,11 +74,27 @@ export default function Confirmation() {
           {[
             { label: 'Route',    value: ride ? `${ride.from_city} → ${ride.to_city}` : '' },
             { label: 'Operator', value: ride?.operator_name },
+            ...(currentBooking.cab_number ? [{ label: 'Cab No.', value: currentBooking.cab_number, highlight: true }] : []),
+            ...(currentBooking.cab?.cab_number && !currentBooking.cab_number ? [{ label: 'Cab No.', value: currentBooking.cab.cab_number, highlight: true }] : []),
             { label: 'Paid',     value: formatCurrency(currentBooking.total_price), color: 'var(--success)' },
-          ].map(({ label, value, color }) => (
+          ].map(({ label, value, color, highlight }) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--bg)' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</span>
+              {highlight ? (
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: '#92400E',
+                  background: '#FEF9C3',
+                  border: '1.5px solid #EAB308',
+                  borderRadius: 5,
+                  padding: '2px 8px',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.06em',
+                }}>{value}</span>
+              ) : (
+                <span style={{ fontSize: 13, fontWeight: 700, color: color || 'var(--text-primary)' }}>{value}</span>
+              )}
             </div>
           ))}
         </div>

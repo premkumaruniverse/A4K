@@ -77,6 +77,7 @@ export default function Payment() {
           total_price: total,
           base_fare: baseFare,
           taxes,
+          cab_number: selectedCab.cab_number || '',
           ride: {
             type: 'cab',
             operator_name: selectedCab.name,
@@ -174,10 +175,11 @@ export default function Payment() {
 
           {(isCabMode ? [
             { label: 'Vehicle',    value: selectedCab.name },
+            { label: 'Cab No.',    value: selectedCab.cab_number || '—', bold: true },
             { label: 'Type',       value: selectedCab.type },
             { label: 'Route',      value: `${selectedCab.from_city} → ${selectedCab.to_city}` },
             { label: 'Driver',     value: selectedCab.driver.name },
-            { label: 'ETA',        value: `${selectedCab.eta_minutes} min`, bold: true },
+            { label: 'ETA',        value: `${selectedCab.eta_minutes} min` },
           ] : [
             { label: 'Route',      value: `${ride.from_city} → ${ride.to_city}` },
             { label: 'Departure',  value: formatTime(ride.departure_time) },

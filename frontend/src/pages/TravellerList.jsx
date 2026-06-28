@@ -45,12 +45,37 @@ function CabCard({ cab, onSelect }) {
 
       {/* Right: Details */}
       <div className="cab-card-h-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        {/* Name + fare */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2 }}>{cab.name}</p>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
-              {cab.type} &bull; {cab.capacity} Seats
-            </p>
+            <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{cab.name}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
+              <Star size={12} fill="#F59E0B" color="#F59E0B" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{cab.rating}</span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({cab.total_reviews})</span>
+            </div>
+            {/* Cab Number Badge — license plate style */}
+            {cab.cab_number && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                marginTop: 7,
+                background: '#FEF9C3',
+                border: '1.5px solid #EAB308',
+                borderRadius: 6,
+                padding: '3px 9px',
+              }}>
+                <Car size={11} color="#92400E" />
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: '#92400E',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.06em',
+                }}>{cab.cab_number}</span>
+              </div>
+            )}
           </div>
           <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)', fontFamily: 'Outfit, var(--font-sans)' }}>
             {formatCurrency(cab.fare)}

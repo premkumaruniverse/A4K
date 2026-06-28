@@ -37,9 +37,7 @@ export default function Home() {
             <h1 style={{ fontSize: 28, fontWeight: 900, fontFamily: 'Outfit, var(--font-sans)', letterSpacing: '-0.02em', marginBottom: 4 }}>
               KGP Shuttle
             </h1>
-            <p style={{ fontSize: 12, opacity: 0.8, fontWeight: 600, letterSpacing: '0.01em' }}>
-              Travel Easy &bull; Travel Comfort - Travel Less
-            </p>
+            <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>Kharagpur ↔ Kolkata</p>
           </div>
           <button
             onClick={() => navigate(user ? '/profile' : '/profile')}
