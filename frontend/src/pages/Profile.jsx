@@ -51,6 +51,19 @@ export default function Profile() {
     }
   }, [user, showEdit]);
 
+  // Sync user state with backend on mount
+  useEffect(() => {
+    if (token) {
+      authAPI.getProfile()
+        .then(res => {
+          updateUser(res.data);
+        })
+        .catch(err => {
+          console.error("Failed to sync profile:", err);
+        });
+    }
+  }, [token]);
+
   if (!token || !user) {
     return (
       <div className="page" style={{ paddingBottom: 90 }}>

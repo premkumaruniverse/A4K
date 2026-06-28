@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Ticket, Clock, ChevronRight, MapPin, ArrowLeft } from 'lucide-react';
+import { Ticket, Clock, ChevronRight, MapPin, ArrowLeft, Car } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { bookingsAPI } from '../services/api';
 import { formatDate, formatTime, formatCurrency } from '../utils/helpers';
@@ -60,10 +60,28 @@ export default function MyBookings() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)' }}>
                     <Clock size={12} /><span style={{ fontSize: 12, fontWeight: 600 }}>{b.ride ? formatTime(b.ride.departure_time) : '—'}</span>
                   </div>
-                  {b.seat_numbers?.length > 0 && (
+                  {/* Seat badge for shuttle bookings */}
+                  {b.seat_numbers?.length > 0 && b.seat_numbers[0] !== '—' && b.ride?.type !== 'cab' && (
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-light)', padding: '2px 8px', borderRadius: 6 }}>
                       Seat {b.seat_numbers.join(', ')}
                     </span>
+                  )}
+                  {/* Cab number badge for cab bookings */}
+                  {(b.cab_number || b.cab?.cab_number) && (
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: '#FEF9C3',
+                      border: '1.5px solid #EAB308',
+                      borderRadius: 6,
+                      padding: '2px 8px',
+                    }}>
+                      <Car size={11} color="#92400E" />
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#92400E', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                        {b.cab_number || b.cab?.cab_number}
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

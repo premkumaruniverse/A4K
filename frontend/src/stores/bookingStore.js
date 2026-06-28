@@ -3,8 +3,8 @@ import { persist } from 'zustand/middleware';
 
 
 const ROUTES = {
-  KGP_CCU: { key: 'KGP_CCU', from: 'Kharagpur', to: 'Kolkata Airport', label: 'Kharagpur → Kolkata Airport' },
-  CCU_KGP: { key: 'CCU_KGP', from: 'Kolkata Airport', to: 'Kharagpur', label: 'Kolkata Airport → Kharagpur' },
+  KGP_CCU: { key: 'KGP_CCU', from: 'Kharagpur', to: 'Kolkata', label: 'Kharagpur → Kolkata' },
+  CCU_KGP: { key: 'CCU_KGP', from: 'Kolkata', to: 'Kharagpur', label: 'Kolkata → Kharagpur' },
 };
 
 const useBookingStore = create(

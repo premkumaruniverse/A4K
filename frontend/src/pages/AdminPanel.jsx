@@ -157,6 +157,7 @@ export default function AdminPanel() {
   const CabForm = ({ initialData, onSubmit, onCancel, isLoading }) => {
     const [formData, setFormData] = useState({
       name: initialData?.name || '',
+      cab_number: initialData?.cab_number || '',
       type: initialData?.type || 'Sedan',
       fare: initialData?.fare || 500,
       capacity: initialData?.capacity || 4,
@@ -173,6 +174,7 @@ export default function AdminPanel() {
       e.preventDefault();
       onSubmit({
         name: formData.name,
+        cab_number: formData.cab_number,
         type: formData.type,
         fare: Number(formData.fare),
         capacity: Number(formData.capacity),
@@ -204,6 +206,31 @@ export default function AdminPanel() {
               <option>Auto</option>
             </select>
           </div>
+        </div>
+
+        {/* Cab Number field — prominent license plate input */}
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Cab Number (Registration Plate)</label>
+          <div style={{ position: 'relative', marginTop: 4 }}>
+            <Car size={16} color="#92400E" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              className="input-field"
+              style={{
+                width: '100%',
+                paddingLeft: 36,
+                textTransform: 'uppercase',
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                letterSpacing: '0.07em',
+                background: '#FEFCE8',
+                border: '1.5px solid #EAB308',
+              }}
+              value={formData.cab_number}
+              onChange={e => setFormData({ ...formData, cab_number: e.target.value.toUpperCase() })}
+              placeholder="e.g. WB 02 AB 1234"
+            />
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Enter the vehicle registration number (shown on booking bill)</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -311,9 +338,9 @@ export default function AdminPanel() {
         <div>
           <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Route</label>
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-            <select className="input-field" style={{ flex: 1 }} value={formData.from_city} onChange={e => setFormData({...formData, from_city: e.target.value, to_city: e.target.value === 'Kharagpur' ? 'Kolkata Airport' : 'Kharagpur'})}>
+            <select className="input-field" style={{ flex: 1 }} value={formData.from_city} onChange={e => setFormData({...formData, from_city: e.target.value, to_city: e.target.value === 'Kharagpur' ? 'Kolkata' : 'Kharagpur'})}>
               <option value="Kharagpur">Kharagpur</option>
-              <option value="Kolkata Airport">Kolkata Airport</option>
+              <option value="Kolkata">Kolkata</option>
             </select>
             <div style={{ display: 'flex', alignItems: 'center' }}>→</div>
             <input className="input-field" style={{ flex: 1 }} value={formData.to_city} disabled />
@@ -539,6 +566,21 @@ export default function AdminPanel() {
                       <div>
                         <h4 style={{ fontSize: 15, fontWeight: 800 }}>{c.name}</h4>
                         <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{c.type} • {c.capacity} seats</p>
+                        {c.cab_number && (
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            marginTop: 5,
+                            background: '#FEF9C3',
+                            border: '1.5px solid #EAB308',
+                            borderRadius: 5,
+                            padding: '2px 7px',
+                          }}>
+                            <Car size={10} color="#92400E" />
+                            <span style={{ fontSize: 10, fontWeight: 800, color: '#92400E', fontFamily: 'monospace', letterSpacing: '0.06em' }}>{c.cab_number}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
