@@ -16,11 +16,29 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/a4k
-            echo "IMAGE_TAG=${{ github.event.workflow_run.head_branch }}" \
-              | grep -q "^v" && \
-              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ github.event.workflow_run.head_branch }}/" .env
-
+            cd ~/a4k
+            
+            # Determine the image tag to set
+            TAG_TO_SET="latest"
+            if [[ "${{ github.event.workflow_run.head_branch }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+              TAG_TO_SET="${{ github.event.workflow_run.head_branch }}"
+            fi
+            
+            echo "Setting IMAGE_TAG to ${TAG_TO_SET}"
+            
+            # Update the .env file with the target tag
+            if [ -f .env ]; then
+              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${TAG_TO_SET}/" .env
+            else
+              echo "IMAGE_TAG=${TAG_TO_SET}" > .env
+            fi
+            
+            # Pull latest images and update the container stack
             docker compose pull
             docker compose up -d --remove-orphans
+            
+            # Flush Nginx DNS resolution cache to prevent 502 Bad Gateway
+            docker exec nginx nginx -s reload
+            
+            # Prune unused images to save disk space
             docker image prune -f
