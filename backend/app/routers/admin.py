@@ -21,8 +21,8 @@ from app.schemas.coupon import CouponSchema, CouponCreate, CouponUpdate
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 VALID_ROUTES = [
-    ("Kharagpur", "Kolkata Airport"),
-    ("Kolkata Airport", "Kharagpur"),
+    ("Kharagpur", "Kolkata"),
+    ("Kolkata", "Kharagpur"),
 ]
 
 
@@ -69,7 +69,7 @@ def create_traveller(
     if not route_valid:
         raise HTTPException(
             status_code=400,
-            detail="Invalid route. Only Kharagpur ↔ Kolkata Airport is supported.",
+            detail="Invalid route. Only Kharagpur ↔ Kolkata is supported.",
         )
 
     ride = Ride(

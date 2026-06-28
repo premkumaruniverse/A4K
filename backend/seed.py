@@ -1,6 +1,6 @@
 """
 Re-seed the database with fixed-route traveller rides.
-Kharagpur → Kolkata Airport and Kolkata Airport → Kharagpur.
+Kharagpur → Kolkata and Kolkata → Kharagpur.
 Each ride has 17 seats numbered 1-17.
 """
 import sys
@@ -30,8 +30,8 @@ db: Session = SessionLocal()
 
 # ── Fixed routes ───────────────────────────────────────────────────────────────
 ROUTES = [
-    {"from": "Kharagpur",       "to": "Kolkata Airport"},
-    {"from": "Kolkata Airport", "to": "Kharagpur"},
+    {"from": "Kharagpur",       "to": "Kolkata"},
+    {"from": "Kolkata", "to": "Kharagpur"},
 ]
 
 # ── Images (High Quality Vehicle Images) ──────────────────────────────────────
@@ -73,7 +73,7 @@ for day_offset in range(30):
             type="traveller",
             operator_name=op["name"],
             from_city="Kharagpur",
-            to_city="Kolkata Airport",
+            to_city="Kolkata",
             departure_time=dep,
             arrival_time=arr,
             price=op["price"] - 20,
@@ -103,7 +103,7 @@ for day_offset in range(30):
         ride = Ride(
             type="traveller",
             operator_name=op["name"],
-            from_city="Kolkata Airport",
+            from_city="Kolkata",
             to_city="Kharagpur",
             departure_time=dep,
             arrival_time=arr,
@@ -124,20 +124,33 @@ for day_offset in range(30):
             db.add(Seat(ride_id=ride.id, seat_number=str(n), seat_type="seater", status="available", price=seat_price))
         ride_count += 1
 
-# ── Create admin user ──────────────────────────────────────────────────────────
-admin_user = User(
+# ── Create admin users ──────────────────────────────────────────────────────────
+db.add(User(
     phone="9999999999",
     name="Admin",
     email="admin@kgpshuttle.com",
     is_active=True,
     is_admin=True,
-)
-db.add(admin_user)
+))
+db.add(User(
+    phone="9330018824",
+    name="Admin User",
+    email="admin2@kgpshuttle.com",
+    is_active=True,
+    is_admin=True,
+))
+db.add(User(
+    phone="9844880650",
+    name="Admin User 2",
+    email="admin3@kgpshuttle.com",
+    is_active=True,
+    is_admin=True,
+))
 
 db.commit()
 db.close()
 
 print(f"\n[OK] Database seeded successfully!")
 print(f"   Rides created : {ride_count}")
-print(f"   Routes        : Kharagpur <-> Kolkata Airport")
+print(f"   Routes        : Kharagpur <-> Kolkata")
 print(f"   Days seeded   : 30")
