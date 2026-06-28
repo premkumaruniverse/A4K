@@ -14,13 +14,6 @@ export default function Home() {
   const [route, setLocalRoute] = useState(selectedRoute?.key || 'KGP_CCU');
   const [date, setLocalDate] = useState(travelDate || todayStr());
 
-  const getGreeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
   const handleSearch = () => {
     setRoute(route);
     setDate(date);
@@ -39,13 +32,14 @@ export default function Home() {
         <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
         <div style={{ position: 'absolute', bottom: 20, left: -40, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <div className="fade-up">
-            <p style={{ fontSize: 12, fontWeight: 600, opacity: 0.7, marginBottom: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{getGreeting()}</p>
-            <h1 style={{ fontSize: 24, fontWeight: 900, fontFamily: 'Outfit, var(--font-sans)', letterSpacing: '-0.02em' }}>
-              {user?.name ? `Hi, ${user.name.split(' ')[0]}!` : 'KGP Shuttle'}
+            <h1 style={{ fontSize: 28, fontWeight: 900, fontFamily: 'Outfit, var(--font-sans)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+              KGP Shuttle
             </h1>
-            <p style={{ fontSize: 13, opacity: 0.7, marginTop: 4 }}>Kharagpur ↔ Kolkata Airport</p>
+            <p style={{ fontSize: 12, opacity: 0.8, fontWeight: 600, letterSpacing: '0.01em' }}>
+              Travel Easy &bull; Travel Comfort - Travel Less
+            </p>
           </div>
           <button
             onClick={() => navigate(user ? '/profile' : '/profile')}
@@ -66,18 +60,40 @@ export default function Home() {
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>Select Route</span>
           </div>
 
-          {/* Route Toggle */}
-          <div className="route-toggle" style={{ marginBottom: 20 }}>
-            {Object.values(ROUTES).map((r) => (
-              <button
-                key={r.key}
-                className={`route-btn ${route === r.key ? 'active' : ''}`}
-                onClick={() => setLocalRoute(r.key)}
-              >
-                {/* <span className="route-btn-label">{r.key === 'KGP_CCU' ? 'From KGP' : 'From CCU'}</span> */}
-                <span className="route-btn-cities">{r.from}<br />→ {r.to}</span>
-              </button>
-            ))}
+          {/* Route Selection - Two Column */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            {Object.values(ROUTES).map((r) => {
+              const isSelected = route === r.key;
+              const isKgpToCcu = r.key === 'KGP_CCU';
+
+              return (
+                <button
+                  key={r.key}
+                  onClick={() => setLocalRoute(r.key)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                    padding: '16px 18px',
+                    borderRadius: 14,
+                    border: isSelected ? '2px solid var(--primary)' : '1.5px solid var(--border)',
+                    background: isSelected ? '#F0F5FF' : '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    boxShadow: isSelected ? '0 4px 16px rgba(37,99,235,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 700, color: isSelected ? 'var(--primary)' : 'var(--text-primary)' }}>
+                    {isKgpToCcu ? 'Kharagpur' : 'Kolkata'}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: isSelected ? 'var(--primary)' : 'var(--text-secondary)', marginTop: 2 }}>
+                    → {isKgpToCcu ? 'Kolkata' : 'Kharagpur'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Date */}
@@ -101,26 +117,22 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Info Section */}
-      <div style={{ padding: '24px 20px 0' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>How it works</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[
-            { step: '01', title: 'Select Route & Date', desc: 'Choose your direction and travel date' },
-            { step: '02', title: 'Pick a Seat', desc: 'Select your preferred seat from the 17-seater layout' },
-            { step: '03', title: 'Verify & Pay', desc: 'OTP login + instant payment confirmation' },
-          ].map(({ step, title, desc }) => (
-            <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--primary)' }}>{step}</span>
-              </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{title}</p>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Route Map Section */}
+      <div style={{ padding: '24px 20px 0' }} className="fade-up">
+        <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Outfit, var(--font-sans)' }}>
+          <MapPin size={18} color="var(--primary)" style={{ flexShrink: 0 }} />
+          Route Map
+        </h2>
+        <img
+          src={route === 'KGP_CCU' ? '/route-kgp-ccu.png' : '/route-ccu-kgp.png'}
+          alt={route === 'KGP_CCU' ? 'Kharagpur to Kolkata route' : 'Kolkata to Kharagpur route'}
+          style={{
+            width: '100%',
+            borderRadius: 16,
+            border: '1.5px solid var(--border)',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        />
       </div>
 
       <BottomNav />

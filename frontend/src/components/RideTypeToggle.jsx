@@ -3,38 +3,44 @@ import { Truck, Car } from 'lucide-react';
 export default function RideTypeToggle({ mode, onModeChange }) {
   return (
     <div style={{
-      display: 'flex',
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 0,
       background: 'var(--bg)',
-      borderRadius: 10,
-      padding: 3,
-      border: '1px solid var(--border)',
-      gap: 2,
+      borderRadius: 14,
+      padding: 4,
+      border: '1.5px solid var(--border)',
     }}>
       {[
-        { value: 'shuttle', icon: <Truck size={14} />, label: 'Shuttle' },
-        { value: 'cab',     icon: <Car  size={14} />, label: 'Cab' },
-      ].map(({ value, icon, label }) => (
-        <button
-          key={value}
-          onClick={() => onModeChange(value)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '5px 10px',
-            borderRadius: 7,
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 700,
-            transition: 'all 0.15s',
-            background: mode === value ? 'var(--primary)' : 'transparent',
-            color:      mode === value ? '#fff'           : 'var(--text-muted)',
-          }}
-        >
-          {icon}{label}
-        </button>
-      ))}
+        { value: 'shuttle', icon: <Truck size={18} />, label: 'Shuttle' },
+        { value: 'cab',     icon: <Car  size={18} />, label: 'Cab' },
+      ].map(({ value, icon, label }) => {
+        const active = mode === value;
+        return (
+          <button
+            key={value}
+            onClick={() => onModeChange(value)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '12px 16px',
+              borderRadius: 11,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 700,
+              transition: 'all 0.2s ease',
+              background: active ? 'var(--primary)' : 'transparent',
+              color: active ? '#fff' : 'var(--text-muted)',
+              boxShadow: active ? '0 4px 12px rgba(37,99,235,0.25)' : 'none',
+            }}
+          >
+            {icon}{label}
+          </button>
+        );
+      })}
     </div>
   );
 }
