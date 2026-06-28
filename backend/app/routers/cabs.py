@@ -15,6 +15,7 @@ _CAB_STORE: List[dict] = [
     {
         "id": "cab-001",
         "name": "Swift Dzire",
+        "cab_number": "WB 02 AB 1234",
         "type": "Sedan",
         "image_url": "https://imgd.aeplcdn.com/664x374/n/cw/ec/45691/dzire-exterior-right-front-three-quarter-2.jpeg",
         "driver": {"name": "Rajesh Kumar", "phone": "98765XXXXX", "rating": 4.8, "trips": 1240},
@@ -29,6 +30,7 @@ _CAB_STORE: List[dict] = [
     {
         "id": "cab-002",
         "name": "Toyota Innova",
+        "cab_number": "WB 05 CD 5678",
         "type": "SUV",
         "image_url": "https://imgd.aeplcdn.com/664x374/n/cw/ec/42355/innova-crysta-exterior-right-front-three-quarter-3.jpeg",
         "driver": {"name": "Suresh Patel", "phone": "91234XXXXX", "rating": 4.9, "trips": 2100},
@@ -43,6 +45,7 @@ _CAB_STORE: List[dict] = [
     {
         "id": "cab-003",
         "name": "Maruti Ertiga",
+        "cab_number": "WB 11 EF 9012",
         "type": "SUV",
         "image_url": "https://imgd.aeplcdn.com/664x374/n/cw/ec/40087/ertiga-exterior-right-front-three-quarter-4.jpeg",
         "driver": {"name": "Amit Singh", "phone": "87654XXXXX", "rating": 4.6, "trips": 890},
@@ -57,6 +60,7 @@ _CAB_STORE: List[dict] = [
     {
         "id": "cab-004",
         "name": "Honda City",
+        "cab_number": "WB 08 GH 3456",
         "type": "Sedan",
         "image_url": "https://imgd.aeplcdn.com/664x374/n/cw/ec/134287/city-exterior-right-front-three-quarter-2.jpeg",
         "driver": {"name": "Vikram Rao", "phone": "76543XXXXX", "rating": 4.7, "trips": 670},
@@ -71,6 +75,7 @@ _CAB_STORE: List[dict] = [
     {
         "id": "cab-005",
         "name": "Mahindra XUV700",
+        "cab_number": "WB 14 IJ 7890",
         "type": "SUV",
         "image_url": "https://imgd.aeplcdn.com/664x374/n/cw/ec/42355/xuv700-exterior-right-front-three-quarter.jpeg",
         "driver": {"name": "Deepak Sharma", "phone": "65432XXXXX", "rating": 4.9, "trips": 430},
@@ -101,7 +106,8 @@ class DriverIn(BaseModel):
 
 class CabCreate(BaseModel):
     name: str
-    type: str                       # Sedan | SUV
+    cab_number: str = ""             # Vehicle registration plate, e.g. WB 02 AB 1234
+    type: str                        # Sedan | SUV
     image_url: Optional[str] = ""
     driver: DriverIn
     eta_minutes: int = 5
@@ -112,6 +118,7 @@ class CabCreate(BaseModel):
 
 class CabUpdate(BaseModel):
     name: Optional[str] = None
+    cab_number: Optional[str] = None  # Vehicle registration plate
     type: Optional[str] = None
     image_url: Optional[str] = None
     driver: Optional[DriverIn] = None
@@ -153,6 +160,7 @@ def admin_create_cab(body: CabCreate, _admin: User = Depends(_require_admin)):
     cab = {
         "id": "cab-" + str(uuid.uuid4())[:8],
         "name": body.name,
+        "cab_number": body.cab_number or "",
         "type": body.type,
         "image_url": body.image_url or "",
         "driver": body.driver.model_dump(),
@@ -174,15 +182,16 @@ def admin_update_cab(cab_id: str, body: CabUpdate, _admin: User = Depends(_requi
     for i, cab in enumerate(_CAB_STORE):
         if cab["id"] == cab_id:
             updated = dict(cab)
-            if body.name is not None:       updated["name"] = body.name
-            if body.type is not None:       updated["type"] = body.type
-            if body.image_url is not None:  updated["image_url"] = body.image_url
-            if body.driver is not None:     updated["driver"] = body.driver.model_dump()
+            if body.name is not None:        updated["name"] = body.name
+            if body.cab_number is not None:  updated["cab_number"] = body.cab_number
+            if body.type is not None:        updated["type"] = body.type
+            if body.image_url is not None:   updated["image_url"] = body.image_url
+            if body.driver is not None:      updated["driver"] = body.driver.model_dump()
             if body.eta_minutes is not None: updated["eta_minutes"] = body.eta_minutes
-            if body.fare is not None:       updated["fare"] = body.fare
-            if body.capacity is not None:   updated["capacity"] = body.capacity
-            if body.amenities is not None:  updated["amenities"] = body.amenities
-            if body.is_active is not None:  updated["is_active"] = body.is_active
+            if body.fare is not None:        updated["fare"] = body.fare
+            if body.capacity is not None:    updated["capacity"] = body.capacity
+            if body.amenities is not None:   updated["amenities"] = body.amenities
+            if body.is_active is not None:   updated["is_active"] = body.is_active
             _CAB_STORE[i] = updated
             return updated
     raise HTTPException(status_code=404, detail="Cab not found")

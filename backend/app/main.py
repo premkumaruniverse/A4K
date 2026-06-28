@@ -18,7 +18,7 @@ Base.metadata.create_all(bind=engine)
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="KGP Shuttle Booking API",
-    description="Kharagpur ↔ Kolkata Airport shuttle booking system",
+    description="Kharagpur ↔ Kolkata shuttle booking system",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",

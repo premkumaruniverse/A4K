@@ -12,13 +12,13 @@ router = APIRouter(prefix="/rides", tags=["Rides"])
 
 # ── Fixed routes only ──────────────────────────────────────────────────────────
 VALID_ROUTES = [
-    {"from": "Kharagpur", "to": "Kolkata Airport"},
-    {"from": "Kolkata Airport", "to": "Kharagpur"},
+    {"from": "Kharagpur", "to": "Kolkata"},
+    {"from": "Kolkata", "to": "Kharagpur"},
 ]
 
 ROUTE_KEYS = {
-    "KGP_CCU": {"from": "Kharagpur",       "to": "Kolkata Airport"},
-    "CCU_KGP": {"from": "Kolkata Airport", "to": "Kharagpur"},
+    "KGP_CCU": {"from": "Kharagpur", "to": "Kolkata"},
+    "CCU_KGP": {"from": "Kolkata",   "to": "Kharagpur"},
 }
 
 
@@ -79,7 +79,7 @@ def search_travellers(
     if not _is_valid_route(from_city, to_city):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid route. Only Kharagpur ↔ Kolkata Airport is supported.",
+            detail=f"Invalid route. Only Kharagpur ↔ Kolkata is supported.",
         )
 
     query = db.query(Ride).filter(

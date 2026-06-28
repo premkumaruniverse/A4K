@@ -1,5 +1,15 @@
-from pydantic_settings import BaseSettings
+import os
 from typing import List
+from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Resolve absolute path to backend/.env
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_file_path = os.path.join(backend_dir, ".env")
+
+# Force override system environment variables with local .env file settings
+if os.path.exists(env_file_path):
+    load_dotenv(env_file_path, override=True)
 
 
 class Settings(BaseSettings):
@@ -18,7 +28,7 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",")]
 
-    model_config = {"env_file": ".env"}
+    model_config = {"env_file": env_file_path}
 
 
 settings = Settings()
